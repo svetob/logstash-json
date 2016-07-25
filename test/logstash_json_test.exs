@@ -1,8 +1,10 @@
 defmodule LogstashJsonTest do
   use ExUnit.Case
-  doctest Logger.Backends.Logstash
+  require Logger
+  
+  doctest LogstashJson.TCP
 
-  test "the truth" do
-    assert 1 + 1 == 2
+  test "Happy-face" do
+    Logger.info "Hello World!"
   end
 end

@@ -1,15 +1,15 @@
-defmodule Logger.Backends.Logstash do
+defmodule LogstashJson.TCP do
   use GenEvent
 
   # TODO Add reconnect logic
   # TODO What to do on log if connection is down?
 
-  def init(_) do
-    {:ok, configure([])}
+  def init({__MODULE__, name}) do
+    {:ok, configure(name, [])}
   end
 
-  def handle_call({:configure, opts}, _state) do
-    {:ok, :ok, configure(opts)}
+  def handle_call({:configure, opts}, %{name: name}) do
+    {:ok, :ok, configure(name, opts)}
   end
 
   def handle_event(:flush, state) do
@@ -34,14 +34,14 @@ defmodule Logger.Backends.Logstash do
 
   ## Helpers
   @timeout 10000
-  defp configure(opts) do
-    env = Application.get_env(:logger, :logstash_json, [])
+  defp configure(name, opts) do
+    env = Application.get_env(:logger, name, [])
     opts = Keyword.merge(env, opts)
-    Application.put_env(:logger, :logstash_json, opts)
+    Application.put_env(:logger, name, opts)
 
     level    = Keyword.get(opts, :level)
     host     = to_char_list(Keyword.get(opts, :host))
-    port     = Integer.parse(Keyword.get(opts, :port))
+    {port,_} = Integer.parse(Keyword.get(opts, :port))
     metadata = Keyword.get(opts, :metadata)
     fields   = Keyword.get(opts, :fields) || %{}
 
@@ -67,7 +67,7 @@ defmodule Logger.Backends.Logstash do
   end
 
   defp log_event(level, msg, ts, md, %{socket: socket} = state) do
-    log = log_json(level, msg, ts, md, state) <> "\n"
+    log = LogstashJson.Message.message(level, msg, ts, md, state) <> "\n"
     case :gen_tcp.send(socket, log) do
       :ok ->
         {:noreply, state}
@@ -75,17 +75,5 @@ defmodule Logger.Backends.Logstash do
         # TODO
         {:noreply, state}
     end
-  end
-
-  defp log_json(level, msg, ts, md, %{metadata: metadata, fields: fields}) do
-    %{
-      "@timestamp": LogstashJson.Timestamp.timestamp(ts),
-      level: level,
-      message: msg,
-      metadata: metadata,
-      module: md[:module],
-      function: md[:function],
-      line: md[:line]
-    } |> Map.merge(fields) |> Poison.encode!()
   end
 end

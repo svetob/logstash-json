@@ -29,8 +29,17 @@ use Mix.Config
 #
 #     import_config "#{Mix.env}.exs"
 
-config :logger, :logstash_json,
+config :logger,
+  backends: [
+    {LogstashJson.TCP, :logstash},
+    {LogstashJson.Console, :console}
+  ]
+
+config :logger, :logstash,
   level: :debug,
-  host: System.get_env("LOGSTASH_TCP_HOST") || "localhost",
+  host: System.get_env("LOGSTASH_TCP_HOST") || "docker.local",
   port: System.get_env("LOGSTASH_TCP_PORT") || "4560",
   fields: %{appid: "logstash-json"}
+
+config :logger, :console,
+  level: :debug

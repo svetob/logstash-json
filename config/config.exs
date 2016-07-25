@@ -31,6 +31,6 @@ use Mix.Config
 
 config :logger, :logstash_json,
   level: :debug,
-  host: 'localhost',
-  port: 4560,
-  fields: %{appid: "schuppen"}
+  host: System.get_env("LOGSTASH_TCP_HOST") || "localhost",
+  port: System.get_env("LOGSTASH_TCP_PORT") || "4560",
+  fields: %{appid: "logstash-json"}

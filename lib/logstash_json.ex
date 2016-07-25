@@ -40,8 +40,8 @@ defmodule Logger.Backends.Logstash do
     Application.put_env(:logger, :logstash_json, opts)
 
     level    = Keyword.get(opts, :level)
-    host     = Keyword.get(opts, :host)
-    port     = Keyword.get(opts, :port)
+    host     = to_char_list(Keyword.get(opts, :host))
+    port     = Integer.parse(Keyword.get(opts, :port))
     metadata = Keyword.get(opts, :metadata)
     fields   = Keyword.get(opts, :fields) || %{}
 

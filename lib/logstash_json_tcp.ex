@@ -1,5 +1,6 @@
 defmodule LogstashJson.TCP do
   use GenEvent
+  alias LogstashJson.TCP
 
   # TODO Add reconnect logic
   # TODO What to do on log if connection is down?
@@ -27,13 +28,12 @@ defmodule LogstashJson.TCP do
     {:ok, state}
   end
 
-  def terminate(_reason, %{socket: socket}) do
-    :gen_tcp.close socket
+  def terminate(_reason, %{conn: conn}) do
+    TCP.Connection.close conn
     :ok
   end
 
-  ## Helpers
-  @timeout 10000
+
   defp configure(name, opts) do
     env = Application.get_env(:logger, name, [])
     opts = Keyword.merge(env, opts)
@@ -45,34 +45,23 @@ defmodule LogstashJson.TCP do
     metadata = Keyword.get(opts, :metadata)
     fields   = Keyword.get(opts, :fields) || %{}
 
-    socket = connect(host, port)
+    {:ok, conn} = connect(host, port)
 
-    %{metadata: metadata, level: level, host: host, port: port, socket: socket, fields: fields}
+    %{metadata: metadata, level: level, host: host, port: port, conn: conn, fields: fields}
   end
 
-  @connection_opts [:binary, {:packet, 0}, {:nodelay, true}, {:keepalive, true}]
-
+  @connection_opts [mode: :binary, keepalive: true]
   defp connect(host, port) do
-    case :gen_tcp.connect(host, port, [:binary, active: :once]) do
-      {:ok, socket} ->
-        socket
-      {:error, _} ->
-        # TODO Handle error
-        nil
-    end
+    TCP.Connection.start_link(host, port, @connection_opts)
   end
 
-  defp log_event(_level, _msg, _ts, _md, %{socket: nil} = state) do
-    {:noreply, state}
-  end
-
-  defp log_event(level, msg, ts, md, %{socket: socket} = state) do
+  defp log_event(level, msg, ts, md, %{conn: conn} = state) do
     log = LogstashJson.Message.message(level, msg, ts, md, state) <> "\n"
-    case :gen_tcp.send(socket, log) do
+    case TCP.Connection.send(conn, log) do
       :ok ->
         {:noreply, state}
-      {:error, _reason} ->
-        # TODO
+      {:error, reason} ->
+        IO.puts "Error logging over TCP: #{inspect reason}"
         {:noreply, state}
     end
   end

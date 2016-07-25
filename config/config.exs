@@ -32,14 +32,14 @@ use Mix.Config
 config :logger,
   backends: [
     {LogstashJson.TCP, :logstash},
-    {LogstashJson.Console, :console}
+    {LogstashJson.Console, :json}
   ]
 
 config :logger, :logstash,
   level: :debug,
-  host: System.get_env("LOGSTASH_TCP_HOST") || "docker.local",
+  host: System.get_env("LOGSTASH_TCP_HOST") || "localhost",
   port: System.get_env("LOGSTASH_TCP_PORT") || "4560",
   fields: %{appid: "logstash-json"}
 
-config :logger, :console,
-  level: :debug
+config :logger, :json,
+  level: :info

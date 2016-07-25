@@ -27,7 +27,8 @@ defmodule LogstashJson.Mixfile do
   #
   # Type "mix help deps" for more examples and options
   defp deps do
-    [{:timex, "~> 3.0"},
+    [{:connection, "~> 1.0.3"},
+     {:timex, "~> 3.0"},
      {:poison, "~> 2.1"}]
   end
 

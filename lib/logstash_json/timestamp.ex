@@ -10,8 +10,8 @@ defmodule LogstashJson.Timestamp do
   defp timezone() do
     local = Timex.Timezone.local()
     offset = local.offset_utc + local.offset_std
-    minute = abs(offset) |> rem(3600) |> div(60)
-    hour   = abs(offset) |> div(3600)
+    minute = offset |> abs() |> rem(3600) |> div(60)
+    hour   = offset |> abs() |> div(3600)
     sign(offset) <> pad(hour, 2) <> ":" <> pad(minute, 2)
   end
 

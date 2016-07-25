@@ -1,8 +1,7 @@
 defmodule LogstashJson.Message do
 
   def message(level, msg, ts, md, %{metadata: metadata, fields: fields}) do
-    json(level, msg, ts, md, %{metadata: metadata, fields: fields})
-      |> Poison.encode!()
+    Poison.encode!(json(level, msg, ts, md, %{metadata: metadata, fields: fields}))
   end
 
   def json(level, msg, ts, md, %{metadata: metadata, fields: fields}) do

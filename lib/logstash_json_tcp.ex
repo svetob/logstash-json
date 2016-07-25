@@ -2,9 +2,6 @@ defmodule LogstashJson.TCP do
   use GenEvent
   alias LogstashJson.TCP
 
-  # TODO Add reconnect logic
-  # TODO What to do on log if connection is down?
-
   def init({__MODULE__, name}) do
     {:ok, configure(name, [])}
   end

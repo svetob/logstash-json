@@ -30,4 +30,12 @@ defmodule LogstashJson.Mixfile do
     [{:timex, "~> 3.0"},
      {:poison, "~> 2.1"}]
   end
+
+  def package do
+    [ name: :logstash_json,
+      maintainers: ["Tobias Ara Svensson"],
+      licenses: ["MIT"],
+      links: %{"Github" => "https://github.com/svetob/logstash-json"},
+    ]
+  end
 end

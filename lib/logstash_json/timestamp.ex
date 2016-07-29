@@ -6,13 +6,21 @@ defmodule LogstashJson.Timestamp do
       timezone()
   end
 
-  # This is the part where we need a large dependency just for local timezone
   defp timezone() do
-    local = Timex.Timezone.local()
-    offset = local.offset_utc + local.offset_std
+    offset = timezone_offset()
     minute = offset |> abs() |> rem(3600) |> div(60)
     hour   = offset |> abs() |> div(3600)
     sign(offset) <> pad(hour, 2) <> ":" <> pad(minute, 2)
+  end
+
+  defp timezone_offset() do
+    t_utc = :calendar.universal_time()
+    t_local = :calendar.universal_time_to_local_time(t_utc)
+
+    s_utc = :calendar.datetime_to_gregorian_seconds(t_utc)
+    s_local = :calendar.datetime_to_gregorian_seconds(t_local)
+
+    s_local - s_utc
   end
 
   defp sign(total) when total < 0, do: "-"

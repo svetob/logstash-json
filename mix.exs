@@ -4,7 +4,7 @@ defmodule LogstashJson.Mixfile do
   def project do
     [app: :logstash_json,
      version: "0.0.1",
-     elixir: "~> 1.2",
+     elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps]
@@ -14,7 +14,7 @@ defmodule LogstashJson.Mixfile do
   #
   # Type "mix help compile.app" for more information
   def application do
-    [applications: [:logger, :timex]]
+    [applications: [:logger]]
   end
 
   # Dependencies can be Hex packages:
@@ -28,7 +28,6 @@ defmodule LogstashJson.Mixfile do
   # Type "mix help deps" for more examples and options
   defp deps do
     [{:connection, "~> 1.0.3"},
-     {:timex, "~> 3.0"},
      {:poison, "~> 2.1"}]
   end
 

@@ -1,6 +1,6 @@
 # logstash-json
 
-Elixir Logger backend for sending logs in JSON format to logstash via TCP.
+Elixir Logger backend which sends logs to logstash in JSON format via TCP.
 
 Also comes with a console logger.
 

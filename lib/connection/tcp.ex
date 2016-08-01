@@ -34,10 +34,10 @@ defmodule LogstashJson.TCP.Connection do
       {:close, from} ->
         Connection.reply(from, :ok)
       {:error, :closed} ->
-        Logger.error("#{host}:#{Integer.to_string(port)} connection closed")
+        IO.puts "#{__MODULE__}: #{host}:#{inspect port} connection closed"
       {:error, reason} ->
         reason = :inet.format_error(reason)
-        Logger.error("#{host}:#{Integer.to_string(port)} connection error: #{reason}")
+        IO.puts "#{__MODULE__}: #{host}:#{inspect port} connection error: #{reason}"
     end
     {:connect, :reconnect, %{state | sock: nil}}
   end

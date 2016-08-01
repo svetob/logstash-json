@@ -3,7 +3,12 @@ defmodule LogstashJson.TCP do
   alias LogstashJson.TCP
 
   def init({__MODULE__, name}) do
-    {:ok, configure(name, [])}
+    if user = Process.whereis(:user) do
+      Process.group_leader(self(), user)
+      {:ok, configure(name, [])}
+    else
+      {:error, :ignore}
+    end
   end
 
   def handle_call({:configure, opts}, %{name: name}) do
@@ -30,22 +35,30 @@ defmodule LogstashJson.TCP do
     :ok
   end
 
-
   defp configure(name, opts) do
     env = Application.get_env(:logger, name, [])
     opts = Keyword.merge(env, opts)
     Application.put_env(:logger, name, opts)
 
-    level    = Keyword.get(opts, :level)
-    host     = to_char_list(Keyword.get(opts, :host))
-    {port,_} = Integer.parse(Keyword.get(opts, :port))
-    metadata = Keyword.get(opts, :metadata)
-    fields   = Keyword.get(opts, :fields) || %{}
+    level      = Keyword.get(opts, :level) || :debug
+    host       = to_char_list(Keyword.get(opts, :host))
+    port       = env_int(Keyword.get(opts, :port))
+    metadata   = Keyword.get(opts, :metadata) || []
+    fields     = Keyword.get(opts, :fields) || %{}
 
     {:ok, conn} = connect(host, port)
 
-    %{metadata: metadata, level: level, host: host, port: port, conn: conn, fields: fields}
+    %{metadata: metadata,
+      level: level,
+      host: host,
+      port: port,
+      conn: conn,
+      fields: fields,
+      name: name}
   end
+
+  defp env_int(e) when is_integer(e), do: e
+  defp env_int(e), do: Integer.parse(e) |> elem(0)
 
   @connection_opts [mode: :binary, keepalive: true]
   defp connect(host, port) do
@@ -58,7 +71,7 @@ defmodule LogstashJson.TCP do
       :ok ->
         {:noreply, state}
       {:error, reason} ->
-        IO.puts "Error logging over TCP: #{inspect reason}"
+        IO.puts "#{__MODULE__}: Error when logging: #{inspect reason}"
         {:noreply, state}
     end
   end

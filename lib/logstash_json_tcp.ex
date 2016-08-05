@@ -65,11 +65,22 @@ defmodule LogstashJson.TCP do
     TCP.Connection.start_link(host, port, @connection_opts)
   end
 
-  defp log_event(level, msg, ts, md, %{conn: conn} = state) do
-    log = LogstashJson.Message.message(level, msg, ts, md, state) <> "\n"
+  defp log_event(level, msg, ts, md, state) do
+    event = LogstashJson.Event.event(level, msg, ts, md, state)
+    case LogstashJson.Event.json(event) do
+      {:ok, log} ->
+        send_log(log, state)
+      {:error, reason} ->
+        IO.puts "Failed to serialize event. error: #{reason}, event: #{inspect event}"
+    end
+  end
+
+  defp send_log(log, %{conn: conn} = state) do
     case TCP.Connection.send(conn, log) do
       :ok ->
         {:noreply, state}
+      {:error, :closed} ->
+        IO.puts "#{__MODULE__}: TCP connection closed."
       {:error, reason} ->
         IO.puts "#{__MODULE__}: Error when logging: #{inspect reason}"
         {:noreply, state}

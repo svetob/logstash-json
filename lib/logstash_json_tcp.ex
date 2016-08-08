@@ -41,7 +41,7 @@ defmodule LogstashJson.TCP do
     Application.put_env(:logger, name, opts)
 
     level      = Keyword.get(opts, :level) || :debug
-    host       = to_char_list(Keyword.get(opts, :host))
+    host       = opts |> Keyword.get(:host) |> env_host |> to_char_list
     port       = env_int(Keyword.get(opts, :port))
     metadata   = Keyword.get(opts, :metadata) || []
     fields     = Keyword.get(opts, :fields) || %{}
@@ -55,6 +55,19 @@ defmodule LogstashJson.TCP do
       conn: conn,
       fields: fields,
       name: name}
+  end
+
+  defp env_host({:system, var, default}) do
+    case System.get_env(var) do
+      nil -> default
+      value -> value
+    end
+  end
+  defp env_host({:system, var}) do
+    System.get_env(var)
+  end
+  defp env_host(value) when is_string(value) do
+    value
   end
 
   defp env_int(e) when is_integer(e), do: e

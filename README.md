@@ -29,8 +29,8 @@ config :logger,
 
 config :logger, :logstash,
   level: :debug,
-  host: System.get_env("LOGSTASH_TCP_HOST") || "localhost",
-  port: System.get_env("LOGSTASH_TCP_PORT") || "4560",
+  host: {:system, "LOGSTASH_TCP_HOST", "localhost"},
+  port: {:system, "LOGSTASH_TCP_PORT", "4560"},
   fields: %{appid: "schuppen"}
 ```
 

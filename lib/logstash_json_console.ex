@@ -42,6 +42,12 @@ defmodule LogstashJson.Console do
   end
 
   defp log_event(level, msg, ts, md, state) do
-    IO.puts LogstashJson.Message.message(level, msg, ts, md, state)
+    event = LogstashJson.Event.event(level, msg, ts, md, state)
+    case LogstashJson.Event.json(event) do
+      {:ok, log} ->
+        IO.puts log
+      {:error, reason} ->
+        IO.puts "Failed to serialize event. error: #{reason}, event: #{inspect event}"
+    end
   end
 end

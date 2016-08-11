@@ -41,8 +41,8 @@ defmodule LogstashJson.TCP do
     Application.put_env(:logger, name, opts)
 
     level      = Keyword.get(opts, :level) || :debug
-    host       = to_char_list(Keyword.get(opts, :host))
-    port       = env_int(Keyword.get(opts, :port))
+    host       = opts |> Keyword.get(:host) |> env_var |> to_char_list
+    port       = opts |> Keyword.get(:port) |> env_var |> to_int
     metadata   = Keyword.get(opts, :metadata) || []
     fields     = Keyword.get(opts, :fields) || %{}
 
@@ -57,8 +57,27 @@ defmodule LogstashJson.TCP do
       name: name}
   end
 
-  defp env_int(e) when is_integer(e), do: e
-  defp env_int(e), do: Integer.parse(e) |> elem(0)
+  defp env_var({:system, var, default}) do
+    case System.get_env(var) do
+      nil -> default
+      value -> value
+    end
+  end
+  defp env_var({:system, var}) do
+    System.get_env(var)
+  end
+  defp env_var(value) do
+    value
+  end
+
+  defp to_int(val) when is_integer(val) do
+    val
+  end
+  defp to_int(val) do
+    val
+    |> Integer.parse
+    |> elem(0)
+  end
 
   @connection_opts [mode: :binary, keepalive: true]
   defp connect(host, port) do

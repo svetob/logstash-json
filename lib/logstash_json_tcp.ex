@@ -95,7 +95,7 @@ defmodule LogstashJson.TCP do
   end
 
   defp send_log(log, %{conn: conn} = state) do
-    case TCP.Connection.send(conn, log) do
+    case TCP.Connection.send(conn, log <> "\n") do
       :ok ->
         {:noreply, state}
       {:error, :closed} ->

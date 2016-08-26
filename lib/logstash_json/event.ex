@@ -1,5 +1,10 @@
 defmodule LogstashJson.Event do
 
+  @moduledoc """
+  This module contains functions for generating and serializing logs events.
+  """
+
+  @doc "Generate a log event from log data"
   def event(level, msg, ts, md, %{metadata: metadata, fields: fields}) do
     Map.merge(fields, %{
       "@timestamp": timestamp(ts),
@@ -12,6 +17,7 @@ defmodule LogstashJson.Event do
     })
   end
 
+  @doc "Serialize a log event to a JSON string"
   def json(event) do
     event |> print_pids |> Poison.encode()
   end

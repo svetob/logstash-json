@@ -2,6 +2,10 @@ defmodule LogstashJson.TCP do
   use GenEvent
   alias LogstashJson.TCP
 
+  @moduledoc """
+  Logger backend which sends logs to logstash via TCP in JSON format.
+  """
+
   def init({__MODULE__, name}) do
     if user = Process.whereis(:user) do
       Process.group_leader(self(), user)

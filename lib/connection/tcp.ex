@@ -2,6 +2,11 @@ defmodule LogstashJson.TCP.Connection do
   use Connection
   require Logger
 
+  @moduledoc """
+  Uses the Connection API to maintain a tcp connection towards logstash and
+  handle connection errors.
+  """
+
   def start_link(host, port, opts, timeout \\ 1000) do
     Connection.start_link(__MODULE__, {host, port, opts, timeout})
   end
@@ -31,15 +36,18 @@ defmodule LogstashJson.TCP.Connection do
   def disconnect(info, %{sock: sock, host: host, port: port} = state) do
     :ok = :gen_tcp.close(sock)
     case info do
-      {:close, from} ->
-        Connection.reply(from, :ok)
-      {:error, :closed} ->
-        IO.puts "#{__MODULE__}: #{host}:#{inspect port} connection closed"
-      {:error, reason} ->
-        reason = :inet.format_error(reason)
-        IO.puts "#{__MODULE__}: #{host}:#{inspect port} connection error: #{reason}"
+      {:close, from} -> Connection.reply(from, :ok)
+      {:error, reason} -> disconnect_error_log(reason, host, port)
     end
     {:connect, :reconnect, %{state | sock: nil}}
+  end
+
+  defp disconnect_error_log(:closed, host, port) do
+    IO.puts "#{__MODULE__}: #{host}:#{inspect port} connection closed"
+  end
+  defp disconnect_error_log(reason, host, port) do
+    reason = :inet.format_error(reason)
+    IO.puts "#{__MODULE__}: #{host}:#{inspect port} connection error: #{reason}"
   end
 
   def handle_call(_, _, %{sock: nil} = state) do

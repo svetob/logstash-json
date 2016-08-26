@@ -1,6 +1,10 @@
 defmodule LogstashJson.Console do
   use GenEvent
 
+  @moduledoc """
+  Logger backend which prints logs to stdout in JSON format.
+  """
+
   def init({__MODULE__, name}) do
     {:ok, configure(name, [])}
   end

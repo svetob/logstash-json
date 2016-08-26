@@ -4,7 +4,7 @@ defmodule LogstashJson.Event do
     Map.merge(fields, %{
       "@timestamp": timestamp(ts),
       level: level,
-      message: msg,
+      message: to_string(msg),
       metadata: metadata,
       module: md[:module],
       function: md[:function],
@@ -49,21 +49,10 @@ defmodule LogstashJson.Event do
     :binary.copy("0", count - byte_size(num)) <> num
   end
 
-
-  # Traverse complex objects and inspect PID's to string representation
-  defp print_pids(it) when it == [],     do: []
-  defp print_pids(it) when is_list(it),  do: [print_pids(hd it) | print_pids(tail it)]
-  defp print_pids(it) when is_tuple(it), do: List.to_tuple(print_pids(Tuple.to_list(it)))
+  # Traverse complex objects and inspect PID's to their string representation
   defp print_pids(it) when is_pid(it),   do: inspect(it)
+  defp print_pids(it) when is_list(it),  do: Enum.map it, &print_pids/1
+  defp print_pids(it) when is_tuple(it), do: List.to_tuple(print_pids(Tuple.to_list(it)))
   defp print_pids(it) when is_map(it),   do: Enum.into(it, %{}, fn {k, v} -> {k, print_pids(v)} end)
   defp print_pids(it), do: it
-
-  # Handle the odd construct [1, 2 | 3] by converting it to [1, 2, 3]
-  defp tail(it) do
-    if (is_list(tl it)) do
-      tl it
-    else
-      [tl it]
-    end
-  end
 end

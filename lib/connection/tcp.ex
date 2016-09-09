@@ -21,8 +21,8 @@ defmodule LogstashJson.TCP.Connection do
   def close(conn), do: Connection.call(conn, :close)
 
   @doc "Update configuration and reconnect"
-  def configure(conn, host, port, opts, timeout \\ 1_000, buffer_max \\ 10_000) do
-    Connection.call(conn, {:configure, host, port, opts, timeout, buffer_max})
+  def configure(conn, host, port, opts) do
+    Connection.call(conn, {:configure, host, port, opts})
   end
 
   def init({host, port, opts, timeout, buffer_max}) do
@@ -79,13 +79,11 @@ defmodule LogstashJson.TCP.Connection do
     {:disconnect, {:close, from}, state}
   end
 
-  def handle_call({:configure, host, port, opts, timeout, buffer_max}, from, state) do
+  def handle_call({:configure, host, port, opts}, from, state) do
     {:disconnect, {:close, from}, %{state |
       host: host,
       port: port,
-      opts: opts,
-      timeout: timeout,
-      buffer_max: buffer_max}}
+      opts: opts}}
   end
 
   defp connect_error_log(reason, host, port) do

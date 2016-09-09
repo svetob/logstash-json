@@ -38,5 +38,4 @@ defmodule LogstashJsonTest do
     :ok = :gen_tcp.close listener
     msg
   end
-
 end

@@ -39,7 +39,9 @@ config :logger, :logstash,
   level: :debug,
   host: System.get_env("LOGSTASH_TCP_HOST") || "localhost",
   port: System.get_env("LOGSTASH_TCP_PORT") || "4560",
-  fields: %{appid: "logstash-json"}
+  fields: %{appid: "logstash-json"},
+  workers: 4,
+  buffer_size: 100_000
 
 config :logger, :json,
   level: :info

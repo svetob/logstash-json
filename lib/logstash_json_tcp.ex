@@ -1,4 +1,5 @@
 defmodule LogstashJson.TCP do
+  import Supervisor.Spec
   use GenEvent
   alias LogstashJson.TCP
 
@@ -34,60 +35,6 @@ defmodule LogstashJson.TCP do
     {:ok, state}
   end
 
-  def terminate(_reason, %{conn: conn}) do
-    TCP.Connection.close conn
-    :ok
-  end
-
-  defp configure(name, opts) do
-    env = Application.get_env(:logger, name, [])
-    opts = Keyword.merge(env, opts)
-    Application.put_env(:logger, name, opts)
-
-    level      = Keyword.get(opts, :level) || :debug
-    host       = opts |> Keyword.get(:host) |> env_var |> to_char_list
-    port       = opts |> Keyword.get(:port) |> env_var |> to_int
-    metadata   = Keyword.get(opts, :metadata) || []
-    fields     = Keyword.get(opts, :fields) || %{}
-
-    {:ok, conn} = connect(host, port)
-
-    %{metadata: metadata,
-      level: level,
-      host: host,
-      port: port,
-      conn: conn,
-      fields: fields,
-      name: name}
-  end
-
-  defp env_var({:system, var, default}) do
-    case System.get_env(var) do
-      nil -> default
-      value -> value
-    end
-  end
-  defp env_var({:system, var}) do
-    System.get_env(var)
-  end
-  defp env_var(value) do
-    value
-  end
-
-  defp to_int(val) when is_integer(val) do
-    val
-  end
-  defp to_int(val) do
-    val
-    |> Integer.parse
-    |> elem(0)
-  end
-
-  @connection_opts [mode: :binary, keepalive: true]
-  defp connect(host, port) do
-    TCP.Connection.start_link(host, port, @connection_opts)
-  end
-
   defp log_event(level, msg, ts, md, state) do
     event = LogstashJson.Event.event(level, msg, ts, md, state)
     case LogstashJson.Event.json(event) do
@@ -98,7 +45,54 @@ defmodule LogstashJson.TCP do
     end
   end
 
-  defp send_log(log, %{conn: conn}) do
-    TCP.Connection.send(conn, log <> "\n")
+  defp send_log(log, %{queue: queue}) do
+    BlockingQueue.push(queue, log <> "\n")
+  end
+
+
+  defp configure(name, opts) do
+    env = Application.get_env(:logger, name, [])
+    opts = Keyword.merge(env, opts)
+    Application.put_env(:logger, name, opts)
+
+    level       = Keyword.get(opts, :level) || :debug
+    host        = opts |> Keyword.get(:host) |> env_var |> to_char_list
+    port        = opts |> Keyword.get(:port) |> env_var |> to_int
+    metadata    = Keyword.get(opts, :metadata) || []
+    fields      = Keyword.get(opts, :fields) || %{}
+    workers     = Keyword.get(opts, :workers) || 4
+    worker_pool = Keyword.get(opts, :worker_pool) || nil
+    buffer_size = Keyword.get(opts, :buffer_size) || 100_000
+
+    # Close previous worker pool
+    if worker_pool != nil do
+      :ok = Supervisor.stop(worker_pool)
+    end
+
+    # Create new queue and worker pool
+    {:ok, queue} = BlockingQueue.start_link(buffer_size)
+
+    children = 1..workers |> Enum.map(& tcp_worker(&1, host, port, queue))
+    {:ok, worker_pool} = Supervisor.start_link(children, [strategy: :one_for_one])
+
+    %{metadata: metadata,
+      level: level,
+      host: host,
+      port: port,
+      fields: fields,
+      name: name,
+      queue: queue,
+      worker_pool: worker_pool}
+  end
+
+  defp env_var({:system, var, default}), do: System.get_env(var) || default
+  defp env_var({:system, var}), do: System.get_env(var)
+  defp env_var(value), do: value
+
+  defp to_int(val) when is_integer(val), do: val
+  defp to_int(val), do: val |> Integer.parse |> elem(0)
+
+  defp tcp_worker(id, host, port, queue) do
+    worker(TCP.Connection, [host, port, queue], id: id)
   end
 end

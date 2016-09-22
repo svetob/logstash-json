@@ -19,6 +19,7 @@ defmodule LogstashJson.Mixfile do
   defp deps do
     [{:connection, "~> 1.0.3"},
      {:poison, "~> 2.1"},
+     {:blocking_queue, "~> 1.0"},
      {:ex_doc, ">= 0.0.0", only: :dev}]
   end
 

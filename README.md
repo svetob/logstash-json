@@ -18,7 +18,8 @@ defp deps do
 end
 ```
 
-In `config.exs` add the logger as a backend and configure it. For example:
+### Logstash TCP logger backend
+In `config.exs` add the TCP logger as a backend and configure it:
 
 ```
 config :logger,
@@ -29,25 +30,33 @@ config :logger,
 
 config :logger, :logstash,
   level: :debug,
+  fields: %{appid: "my-app"},
   host: {:system, "LOGSTASH_TCP_HOST", "localhost"},
   port: {:system, "LOGSTASH_TCP_PORT", "4560"},
-  fields: %{appid: "schuppen"}
+  workers: 2,
+  buffer_size: 10_000
 ```
+
+The parameters are:
+- __host__: (Required) Logstash host.
+- __port__: (Required) Logstash port.
+- __workers__: Number of TCP workers, each worker opens a new TCP connection. (Default: 2)
+- __buffer_size__: Size of internal message buffer, used when logs are generated faster than logstash can consume them. (Default: 10_000)
+- __fields__: Additional fields to add to the JSON payload, such as appid. (Default: none)
+
+The TCP logger handles various failure scenarios differently:
+- If the internal message buffer fills up, logging new messages __blocks__ until more messages are sent and there is space available in the buffer again.
+- If the logstash connection is lost, logged messages are __dropped__.
+
+### Console logger backend
 
 You can also log JSON to console if you'd like:
 
 ```
 config :logger,
   backends: [
-    {LogstashJson.TCP, :logstash},
     {LogstashJson.Console, :json}
   ]
-
-config :logger, :logstash,
-  level: :debug,
-  host: System.get_env("LOGSTASH_TCP_HOST") || "docker.local",
-  port: System.get_env("LOGSTASH_TCP_PORT") || "4560",
-  fields: %{appid: "logstash-json"}
 
 config :logger, :json,
   level: :debug

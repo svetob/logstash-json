@@ -60,9 +60,9 @@ defmodule LogstashJson.TCP do
     port        = opts |> Keyword.get(:port) |> env_var |> to_int
     metadata    = Keyword.get(opts, :metadata) || []
     fields      = Keyword.get(opts, :fields) || %{}
-    workers     = Keyword.get(opts, :workers) || 4
+    workers     = Keyword.get(opts, :workers) || 2
     worker_pool = Keyword.get(opts, :worker_pool) || nil
-    buffer_size = Keyword.get(opts, :buffer_size) || 100_000
+    buffer_size = Keyword.get(opts, :buffer_size) || 10_000
 
     # Close previous worker pool
     if worker_pool != nil do

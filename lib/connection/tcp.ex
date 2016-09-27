@@ -12,8 +12,8 @@ defmodule LogstashJson.TCP.Connection do
 
   @connection_opts [active: false, mode: :binary, keepalive: true, packet: 0]
 
-  def start_link(host, port, queue, timeout \\ 1_000) do
-    Connection.start_link(__MODULE__, {host, port, queue, timeout})
+  def start_link(host, port, queue, id \\ 0, timeout \\ 1_000) do
+    Connection.start_link(__MODULE__, {host, port, queue, id, timeout})
   end
 
   @doc "Send message to logstash backend"
@@ -29,10 +29,11 @@ defmodule LogstashJson.TCP.Connection do
     Connection.call(conn, {:configure, host, port})
   end
 
-  def init({host, port, queue, timeout}) do
+  def init({host, port, queue, id, timeout}) do
     LogstashJson.TCP.Connection.Worker.start_link(self(), queue)
 
     state = %{
+      id: id,
       host: host,
       port: port,
       timeout: timeout,
@@ -40,41 +41,40 @@ defmodule LogstashJson.TCP.Connection do
     {:connect, :init, state}
   end
 
-  def connect(_, %{sock: nil, host: host, port: port, timeout: timeout} = state) do
+  def connect(info, %{id: id, sock: nil, host: host, port: port, timeout: timeout} = state) do
     case :gen_tcp.connect(host, port, @connection_opts, timeout) do
       {:ok, sock} ->
         {:ok, %{state | sock: sock}}
-      {:error, :econnrefused} ->
-        {:backoff, 1000, state}
       {:error, reason} ->
-        connect_error_log(reason, host, port)
+        if info != :backoff, do: connect_error_log(id, reason, host, port)
         {:backoff, 1000, state}
     end
   end
 
-  def disconnect(info, %{sock: sock, host: host, port: port} = state) do
+  def disconnect(info, %{id: id, sock: sock, host: host, port: port} = state) do
     if sock != nil do
       :ok = :gen_tcp.close(sock)
     end
     case info do
       {:close, from} -> Connection.reply(from, :ok)
-      {:error, reason} -> disconnect_error_log(reason, host, port)
+      {:error, reason} -> disconnect_error_log(id, reason, host, port)
     end
     {:connect, :reconnect, %{state | sock: nil}}
   end
 
+  # Drop message and attempt to reconnect if no connection is open
   def handle_call({:send, _data}, _from, %{sock: nil} = state) do
-    {:reply, :ok, state}
+    {:connect, :reconnect, :reconnect, state}
   end
 
-  def handle_call({:send, data}, _from, %{sock: sock} = state) do
+  def handle_call({:send, data}, _from, %{id: id, sock: sock} = state) do
     case :gen_tcp.send(sock, data) do
       :ok ->
         {:reply, :ok, state}
       {:error, :closed} = error ->
         {:disconnect, error, error, state}
       {:error, reason} = error ->
-        send_error_log(reason)
+        send_error_log(id, reason)
         {:disconnect, error, error, state}
     end
   end
@@ -95,20 +95,20 @@ defmodule LogstashJson.TCP.Connection do
     end
   end
 
-  defp connect_error_log(reason, host, port) do
+  defp connect_error_log(id, reason, host, port) do
     reason = :inet.format_error(reason)
-    IO.puts "#{__MODULE__}: #{host}:#{inspect port} connection failed: #{reason}"
+    IO.puts "#{__MODULE__}[#{id}]: #{host}:#{inspect port} connection failed: #{reason}"
   end
-  defp disconnect_error_log(:closed, host, port) do
-    IO.puts "#{__MODULE__}: #{host}:#{inspect port} connection closed"
+  defp disconnect_error_log(id, :closed, host, port) do
+    IO.puts "#{__MODULE__}[#{id}]: #{host}:#{inspect port} connection closed"
   end
-  defp disconnect_error_log(reason, host, port) do
+  defp disconnect_error_log(id, reason, host, port) do
     reason = :inet.format_error(reason)
-    IO.puts "#{__MODULE__}: #{host}:#{inspect port} connection error: #{reason}"
+    IO.puts "#{__MODULE__}[#{id}]: #{host}:#{inspect port} connection error: #{reason}"
   end
-  defp send_error_log(reason) do
+  defp send_error_log(id, reason) do
     reason = :inet.format_error(reason)
-    IO.puts "#{__MODULE__}: error sending over TCP: #{reason}"
+    IO.puts "#{__MODULE__}[#{id}]: error sending over TCP: #{reason}"
   end
 end
 

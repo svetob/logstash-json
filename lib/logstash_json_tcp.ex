@@ -93,6 +93,6 @@ defmodule LogstashJson.TCP do
   defp to_int(val), do: val |> Integer.parse |> elem(0)
 
   defp tcp_worker(id, host, port, queue) do
-    worker(TCP.Connection, [host, port, queue], id: id)
+    worker(TCP.Connection, [host, port, queue, id], id: id)
   end
 end

@@ -24,10 +24,31 @@ defmodule LogstashJsonTest do
     assert msg |> String.ends_with?("\n")
   end
 
+  test "Can send several messages" do
+    listener = new_listener()
+
+    Logger.info "Hello world!"
+    Logger.info "Foo?"
+    Logger.info "Bar!"
+
+    # Receive all
+    {:ok, socket} = :gen_tcp.accept(listener, 1000)
+    msg = recv_all(socket)
+
+    assert msg |> String.contains?("Hello world!")
+    assert msg |> String.contains?("Foo?")
+    assert msg |> String.contains?("Bar!")
+
+    :ok = :gen_tcp.close socket
+    :ok = :gen_tcp.close listener
+  end
+
   defp new_listener() do
     {:ok, listener} = :gen_tcp.listen 0, [:binary, {:active, false}, {:packet, 0}, {:reuseaddr, true}]
     {:ok, port} = :inet.port listener
-    Logger.configure_backend {LogstashJson.TCP, :logstash}, port: port
+    Logger.configure_backend {LogstashJson.TCP, :logstash},
+      port: port,
+      workers: 1
     listener
   end
 
@@ -37,5 +58,12 @@ defmodule LogstashJsonTest do
     :ok = :gen_tcp.close socket
     :ok = :gen_tcp.close listener
     msg
+  end
+
+  defp recv_all(socket) do
+    case :gen_tcp.recv(socket, 0, 100) do
+      {:ok, msg} -> msg <> recv_all socket
+      {:error, :timeout} -> ""
+    end
   end
 end

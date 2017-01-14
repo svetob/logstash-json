@@ -89,7 +89,7 @@ defmodule LogstashJson.TCP.Connection do
       port: port}}
   end
 
-  def terminate(_, %{sock: sock} = state) do
+  def terminate(_, %{sock: sock}) do
     if sock != nil do
       :ok = :gen_tcp.close(sock)
     end

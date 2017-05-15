@@ -48,8 +48,36 @@ The TCP logger handles various failure scenarios differently:
 - If the internal message buffer fills up, logging new messages __blocks__ until more messages are sent and there is space available in the buffer again.
 - If the logstash connection is lost, logged messages are __dropped__.
 
+
+### Console logger backend
+
+You can also log JSON to console if you'd like:
+
+```Elixir
+config :logger,
+  backends: [
+    {LogstashJson.Console, :json}
+  ]
+
+config :logger, :json,
+  level: :debug
+```
+
 #### Passing additional Metadata
-Using `Logger.metadata/1` it is possible to send additional information that can be sent as a part of a log statement. An example is to send HTTP status codes or request duration details.
+Using `Logger.metadata/1` it is possible to send additional information that can be sent as a part of a log statement. These will appear in Kibana as separate fields. An example is to send HTTP status codes or request duration details.
+Metadata can also be appended with the second argument of `Logger.info/2`.
+
+```Elixir
+iex(1)> require Logger
+Logger
+iex(2)> Logger.metadata([status: 200, method: "GET"])
+:ok
+iex(3)> Logger.info "Test"
+:ok
+{"module":null,"metadata":{"status":200,"pid":"#PID<0.157.0>","module":null,"method":"GET","line":3,"function":null,"file":"iex"},"message":"Test","line":3,"level":"info","function":null,"@timestamp":"2017-05-15T16:12:26.568+02:00"}
+iex(4)> Logger.info "Test", [foo: "bar"]
+{"module":null,"metadata":{"status":200,"pid":"#PID<0.157.0>","module":null,"method":"GET","line":4,"function":null,"foo":"bar","file":"iex"},"message":"Test","line":4,"level":"info","function":null,"@timestamp":"2017-05-15T16:13:18.254+02:00"}
+```
 
 Here is an example plug for setting the Metadata
 
@@ -84,32 +112,7 @@ defmodule LoggerMetadata do
 end
 ```
 
-Then in the config file to send this metadata, configure the logging like so
 
-```Elixir
-config :logger, :logstash,
-  level: :debug,
-  fields: %{appid: "my-app"},
-  host: {:system, "LOGSTASH_TCP_HOST", "localhost"},
-  port: {:system, "LOGSTASH_TCP_PORT", "4560"},
-  workers: 2,
-  buffer_size: 10_000,
-  metadata: [:status, :request_path, :method, :query_string]
-```
-
-### Console logger backend
-
-You can also log JSON to console if you'd like:
-
-```Elixir
-config :logger,
-  backends: [
-    {LogstashJson.Console, :json}
-  ]
-
-config :logger, :json,
-  level: :debug
-```
 
 ## TODO list
 

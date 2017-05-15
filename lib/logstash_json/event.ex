@@ -33,7 +33,7 @@ defmodule LogstashJson.Event do
 
   # Functions for generating timestamp
   defp timestamp({{year, month, day}, {hour, min, sec, millis}}) do
-    pad(year,4) <> "-" <> pad(month, 2) <> "-" <> pad(day,2) <> "T" <>
+    pad(year, 4) <> "-" <> pad(month, 2) <> "-" <> pad(day, 2) <> "T" <>
       pad(hour, 2) <> ":" <> pad(min, 2) <> ":" <> pad(sec, 2) <> "." <> pad(millis, 3) <>
       timezone()
   end

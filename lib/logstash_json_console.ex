@@ -39,7 +39,7 @@ defmodule LogstashJson.Console do
     Application.put_env(:logger, name, opts)
 
     level    = Keyword.get(opts, :level)
-    metadata = Keyword.get(opts, :metadata)
+    metadata = Keyword.get(opts, :metadata) || []
     fields   = Keyword.get(opts, :fields) || %{}
 
     %{metadata: metadata, level: level, fields: fields}

@@ -1,0 +1,13 @@
+language: elixir
+elixir:
+  - 1.4.2
+otp_release:
+  - 19.2
+
+script:
+  - mix credo -a
+  - mix test
+
+notifications:
+  recipients:
+    - tobsve03@gmail.com

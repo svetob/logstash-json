@@ -1,4 +1,4 @@
-defmodule TcpConnectionTest do
+defmodule LogstashJsonTcpConnectionTest do
   use ExUnit.Case, async: false
   require Logger
 
@@ -28,7 +28,6 @@ defmodule TcpConnectionTest do
     :ok = :gen_tcp.close socket
     :ok = :gen_tcp.close listener
 
-    # msg = recv_and_close(listener)
     assert msg == "Three\n"
   end
 

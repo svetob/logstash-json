@@ -1,5 +1,5 @@
 defmodule EventTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: false
   alias LogstashJson.Event
 
   test "Creates and serializes event" do
@@ -10,7 +10,7 @@ defmodule EventTest do
 
     assert Map.get(event, :message) == message
     assert Map.get(event, :level) == :info
-    assert Map.get(event, :metadata) == []
+    assert Map.get(event, :metadata) == %{}
     assert String.length(time) == 29
   end
 

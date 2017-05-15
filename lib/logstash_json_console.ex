@@ -41,8 +41,9 @@ defmodule LogstashJson.Console do
     level    = Keyword.get(opts, :level)
     metadata = Keyword.get(opts, :metadata) || []
     fields   = Keyword.get(opts, :fields) || %{}
+    utc_log  = Application.get_env(:logger, :utc_log, false)
 
-    %{metadata: metadata, level: level, fields: fields}
+    %{metadata: metadata, level: level, fields: fields, utc_log: utc_log}
   end
 
   defp log_event(level, msg, ts, md, state) do

@@ -23,6 +23,15 @@ defmodule EventTest do
     assert Map.get(event, :foo) == "bar"
   end
 
+  test "Adds no timezone offset for utc_log" do
+    event = Event.event(:info, "", {{2015,1,1},{0,0,0,0}}, [], %{
+      metadata: [],
+      fields: %{},
+      utc_log: true
+    })
+    assert Map.get(event, :"@timestamp") =~ "+00:00"
+  end
+
   test "Converts event to json" do
     message = "Meowson the third"
     event = log_json(message) |> Poison.decode!()
@@ -44,7 +53,8 @@ defmodule EventTest do
   defp log(msg, fields \\ %{}) do
     Event.event(:info, msg, {{2015,1,1},{0,0,0,0}}, [], %{
       metadata: [],
-      fields: fields
+      fields: fields,
+      utc_log: false
     })
   end
 

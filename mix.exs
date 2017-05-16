@@ -26,7 +26,7 @@ defmodule LogstashJson.Mixfile do
 
   defp description do
     """
-    Elixir Logger backend which sends logs to logstash in JSON format via TCP.
+    Formats logs as JSON, forwards to Logstash via TCP, or to console.
     """
   end
 

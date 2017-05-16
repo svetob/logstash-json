@@ -24,7 +24,7 @@ defmodule EventTest do
   end
 
   test "Adds no timezone offset for utc_log" do
-    event = Event.event(:info, "", {{2015,1,1},{0,0,0,0}}, [], %{
+    event = Event.event(:info, "", {{2015, 1, 1}, {0, 0, 0, 0}}, [], %{
       metadata: [],
       fields: %{},
       utc_log: true
@@ -50,9 +50,13 @@ defmodule EventTest do
       |> Map.get(:message) == "abc"
   end
 
-  defp log(msg, fields \\ %{}) do
-    Event.event(:info, msg, {{2015,1,1},{0,0,0,0}}, [], %{
-      metadata: [],
+  test "Includes metadata" do
+    assert log("Hello", %{}, [foo: "Bar"])
+      |> Map.get(:metadata) == %{foo: "Bar"}
+  end
+
+  defp log(msg, fields \\ %{}, metadata \\ []) do
+    Event.event(:info, msg, {{2015, 1, 1}, {0, 0, 0, 0}}, metadata, %{
       fields: fields,
       utc_log: false
     })

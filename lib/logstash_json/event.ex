@@ -5,12 +5,12 @@ defmodule LogstashJson.Event do
   """
 
   @doc "Generate a log event from log data"
-  def event(level, msg, ts, md, %{metadata: metadata, fields: fields}) do
+  def event(level, msg, ts, md, %{fields: fields}) do
     Map.merge(fields, %{
       "@timestamp": timestamp(ts),
       level: level,
       message: to_string(msg),
-      metadata: take_metadata(md, metadata),
+      metadata: format_metadata(md),
       module: md[:module],
       function: md[:function],
       line: md[:line]
@@ -22,13 +22,8 @@ defmodule LogstashJson.Event do
     event |> print_pids |> Poison.encode()
   end
 
-  defp take_metadata(metadata, keys) do
-    Enum.reduce keys, %{}, fn key, acc ->
-      case Keyword.fetch(metadata, key) do
-        {:ok, val} -> Map.merge(acc, %{key => val})
-        :error     -> Map.merge(acc, %{key => :nil})
-      end
-    end
+  defp format_metadata(metadata) do
+    metadata |> Enum.into(%{})
   end
 
   # Functions for generating timestamp

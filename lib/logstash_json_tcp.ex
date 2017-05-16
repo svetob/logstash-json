@@ -58,7 +58,6 @@ defmodule LogstashJson.TCP do
     level       = Keyword.get(opts, :level) || :debug
     host        = opts |> Keyword.get(:host) |> env_var |> to_char_list
     port        = opts |> Keyword.get(:port) |> env_var |> to_int
-    metadata    = Keyword.get(opts, :metadata) || []
     fields      = Keyword.get(opts, :fields) || %{}
     workers     = Keyword.get(opts, :workers) || 2
     worker_pool = Keyword.get(opts, :worker_pool) || nil
@@ -75,8 +74,7 @@ defmodule LogstashJson.TCP do
     children = 1..workers |> Enum.map(& tcp_worker(&1, host, port, queue))
     {:ok, worker_pool} = Supervisor.start_link(children, [strategy: :one_for_one])
 
-    %{metadata: metadata,
-      level: level,
+    %{level: level,
       host: host,
       port: port,
       fields: fields,

@@ -62,6 +62,7 @@ defmodule LogstashJson.TCP do
     workers     = Keyword.get(opts, :workers) || 2
     worker_pool = Keyword.get(opts, :worker_pool) || nil
     buffer_size = Keyword.get(opts, :buffer_size) || 10_000
+    utc_log     = Application.get_env(:logger, :utc_log, false)
 
     # Close previous worker pool
     if worker_pool != nil do
@@ -80,7 +81,8 @@ defmodule LogstashJson.TCP do
       fields: fields,
       name: name,
       queue: queue,
-      worker_pool: worker_pool}
+      worker_pool: worker_pool,
+      utc_log: utc_log}
   end
 
   defp env_var({:system, var, default}), do: System.get_env(var) || default

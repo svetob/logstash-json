@@ -2,7 +2,7 @@ defmodule LogstashJson.Console do
   use GenEvent
 
   @moduledoc """
-  Logger backend which prints logs to stdout in JSON format.
+  Logger backend which prints logs to stdout in JSON format.
   """
 
   def init({__MODULE__, name}) do
@@ -40,8 +40,9 @@ defmodule LogstashJson.Console do
 
     level    = Keyword.get(opts, :level)
     fields   = Keyword.get(opts, :fields) || %{}
+    utc_log  = Application.get_env(:logger, :utc_log, false)
 
-    %{level: level, fields: fields}
+    %{level: level, fields: fields, utc_log: utc_log}
   end
 
   defp log_event(level, msg, ts, md, state) do

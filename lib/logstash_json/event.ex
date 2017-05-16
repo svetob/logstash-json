@@ -1,13 +1,13 @@
 defmodule LogstashJson.Event do
 
   @moduledoc """
-  This module contains functions for generating and serializing logs events.
+  This module contains functions for generating and serializing logs events.
   """
 
   @doc "Generate a log event from log data"
-  def event(level, msg, ts, md, %{fields: fields}) do
+  def event(level, msg, ts, md, %{fields: fields, utc_log: utc_log}) do
     Map.merge(fields, %{
-      "@timestamp": timestamp(ts),
+      "@timestamp": timestamp(ts, utc_log),
       level: level,
       message: to_string(msg),
       metadata: format_metadata(md),
@@ -27,11 +27,17 @@ defmodule LogstashJson.Event do
   end
 
   # Functions for generating timestamp
-  defp timestamp({{year, month, day}, {hour, min, sec, millis}}) do
-    pad(year, 4) <> "-" <> pad(month, 2) <> "-" <> pad(day, 2) <> "T" <>
-      pad(hour, 2) <> ":" <> pad(min, 2) <> ":" <> pad(sec, 2) <> "." <> pad(millis, 3) <>
-      timezone()
+  defp timestamp(ts, utc_log) do
+    datetime(ts) <> timezone(utc_log)
   end
+
+  defp datetime({{year, month, day}, {hour, min, sec, millis}}) do
+    pad(year, 4) <> "-" <> pad(month, 2) <> "-" <> pad(day, 2) <> "T" <>
+      pad(hour, 2) <> ":" <> pad(min, 2) <> ":" <> pad(sec, 2) <> "." <> pad(millis, 3)
+  end
+
+  defp timezone(_utc_true = true), do: "+00:00"
+  defp timezone(_), do: timezone
 
   defp timezone() do
     offset = timezone_offset()

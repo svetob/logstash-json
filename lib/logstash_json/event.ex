@@ -37,7 +37,7 @@ defmodule LogstashJson.Event do
   end
 
   defp timezone(_utc_true = true), do: "+00:00"
-  defp timezone(_), do: timezone
+  defp timezone(_), do: timezone()
 
   defp timezone() do
     offset = timezone_offset()

@@ -12,7 +12,7 @@ defmodule LogstashJsonConsoleTest do
     io = capture_io(fn ->
       logger = new_logger()
       log(logger, "Hello world!")
-      GenEvent.stop(logger)
+      :gen_event.stop(logger)
     end)
 
     event = Poison.decode!(io)
@@ -24,7 +24,7 @@ defmodule LogstashJsonConsoleTest do
     io = capture_io(fn ->
       logger = new_logger()
       log(logger, "Hello world!")
-      GenEvent.stop(logger)
+      :gen_event.stop(logger)
     end)
 
     assert io |> String.ends_with?("\n")
@@ -34,7 +34,7 @@ defmodule LogstashJsonConsoleTest do
     io = capture_io(fn ->
       logger = new_logger()
       log(logger, "Hello world!", :warn)
-      GenEvent.stop(logger)
+      :gen_event.stop(logger)
     end)
 
     event = Poison.decode!(io)
@@ -47,7 +47,7 @@ defmodule LogstashJsonConsoleTest do
       log(logger, "Hello world!")
       log(logger, "Foo?")
       log(logger, "Bar!")
-      GenEvent.stop(logger)
+      :gen_event.stop(logger)
     end)
 
     lines = io |> String.trim() |> String.split("\n") |> List.to_tuple()
@@ -61,7 +61,7 @@ defmodule LogstashJsonConsoleTest do
     io = capture_io(fn ->
       logger = new_logger()
       log(logger, "Hello world!", :info, [car: "Lamborghini"])
-      GenEvent.stop(logger)
+      :gen_event.stop(logger)
     end)
 
     event = Poison.decode!(io)
@@ -76,7 +76,7 @@ defmodule LogstashJsonConsoleTest do
     io = capture_io(fn ->
       logger = new_logger()
       log(logger, "Hello world!")
-      GenEvent.stop(logger)
+      :gen_event.stop(logger)
     end)
 
     event = Poison.decode!(io)
@@ -84,14 +84,14 @@ defmodule LogstashJsonConsoleTest do
   end
 
   defp new_logger do
-    {:ok, manager} = GenEvent.start_link()
-    GenEvent.add_handler(manager, LogstashJson.Console, {LogstashJson.Console, :json})
+    {:ok, manager} = :gen_event.start_link()
+    :gen_event.add_handler(manager, LogstashJson.Console, {LogstashJson.Console, :json})
     manager
   end
 
   defp log(logger, msg, level \\ :info, metadata \\ []) do
     ts = {{2017, 1, 1}, {1, 2, 3, 400}}
-    GenEvent.notify(logger, {level, logger, {Logger, msg, ts, metadata}})
+    :gen_event.notify(logger, {level, logger, {Logger, msg, ts, metadata}})
     Process.sleep(100) #GenEvent.notify is async, must wait for IO to appear
   end
 end

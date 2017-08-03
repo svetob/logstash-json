@@ -12,7 +12,7 @@ defmodule LogstashJsonTcpTest do
     log(logger, "Hello world!")
 
     msg = recv_and_close(listener)
-    GenEvent.stop(logger)
+    :gen_event.stop(logger)
 
     event = Poison.decode!(msg)
     assert event["message"] == "Hello world!"
@@ -25,7 +25,7 @@ defmodule LogstashJsonTcpTest do
     log(logger, "Hello world!")
 
     msg = recv_and_close(listener)
-    GenEvent.stop(logger)
+    :gen_event.stop(logger)
 
     assert msg |> String.ends_with?("\n")
   end
@@ -42,7 +42,7 @@ defmodule LogstashJsonTcpTest do
     msg = recv_all(socket)
     :ok = :gen_tcp.close socket
     :ok = :gen_tcp.close listener
-    GenEvent.stop(logger)
+    :gen_event.stop(logger)
 
     lines = msg |> String.trim() |> String.split("\n") |> List.to_tuple()
     assert tuple_size(lines) == 3
@@ -57,7 +57,7 @@ defmodule LogstashJsonTcpTest do
     log(logger, "Hello world!", :info, [car: "Lamborghini"])
 
     msg = recv_and_close(listener)
-    GenEvent.stop(logger)
+    :gen_event.stop(logger)
 
     event = Poison.decode!(msg)
     assert event["metadata"]["car"]  == "Lamborghini"
@@ -72,7 +72,7 @@ defmodule LogstashJsonTcpTest do
     log(logger, "Hello world!", :info, [car: "Lamborghini"])
 
     msg = recv_and_close(listener)
-    GenEvent.stop(logger)
+    :gen_event.stop(logger)
 
     event = Poison.decode!(msg)
     assert event["test_field"] == "test_value"
@@ -88,8 +88,8 @@ defmodule LogstashJsonTcpTest do
     opts = :logger |> Application.get_env(:logstash) |> Keyword.put(:port, "#{port}")
     Application.put_env(:logger, :logstash, opts)
 
-    {:ok, manager} = GenEvent.start_link()
-    GenEvent.add_handler(manager, LogstashJson.TCP, {LogstashJson.TCP, :logstash})
+    {:ok, manager} = :gen_event.start_link()
+    :gen_event.add_handler(manager, LogstashJson.TCP, {LogstashJson.TCP, :logstash})
     manager
   end
 
@@ -110,6 +110,6 @@ defmodule LogstashJsonTcpTest do
 
   defp log(logger, msg, level \\ :info, metadata \\ []) do
     ts = {{2017, 1, 1}, {1, 2, 3, 400}}
-    GenEvent.notify(logger, {level, logger, {Logger, msg, ts, metadata}})
+    :gen_event.notify(logger, {level, logger, {Logger, msg, ts, metadata}})
   end
 end

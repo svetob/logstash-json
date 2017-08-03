@@ -1,18 +1,21 @@
 defmodule LogstashJson.Console do
-  use GenEvent
-
   @moduledoc """
   Logger backend which prints logs to stdout in JSON format.
   """
 
+  @behaviour :gen_event
+
+  @doc false
   def init({__MODULE__, name}) do
     {:ok, configure(name, [])}
   end
 
+  @doc false
   def handle_call({:configure, opts}, %{name: name}) do
     {:ok, :ok, configure(name, opts)}
   end
 
+  @doc false
   def handle_event(:flush, state) do
     {:ok, state}
   end
@@ -28,8 +31,19 @@ defmodule LogstashJson.Console do
     {:ok, state}
   end
 
+  @doc false
+  def handle_info(_msg, state) do
+    {:ok, state}
+  end
+
+  @doc false
   def terminate(_reason, _state) do
     :ok
+  end
+
+  @doc false
+  def code_change(_reason, state, _extra) do
+    {:ok, state}
   end
 
   ## Helpers

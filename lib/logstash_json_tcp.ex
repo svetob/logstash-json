@@ -1,12 +1,14 @@
 defmodule LogstashJson.TCP do
-  import Supervisor.Spec
-  use GenEvent
-  alias LogstashJson.TCP
-
   @moduledoc """
   Logger backend which sends logs to logstash via TCP in JSON format.
   """
 
+  @behaviour :gen_event
+
+  import Supervisor.Spec
+  alias LogstashJson.TCP
+
+  @doc false
   def init({__MODULE__, name}) do
     if user = Process.whereis(:user) do
       Process.group_leader(self(), user)
@@ -16,10 +18,17 @@ defmodule LogstashJson.TCP do
     end
   end
 
+  @doc false
   def handle_call({:configure, opts}, %{name: name}) do
     {:ok, :ok, configure(name, opts)}
   end
 
+  @doc false
+  def handle_info(_msg, state) do
+    {:ok, state}
+  end
+
+  @doc false
   def handle_event(:flush, state) do
     {:ok, state}
   end
@@ -32,6 +41,16 @@ defmodule LogstashJson.TCP do
     if is_nil(min_level) or Logger.compare_levels(level, min_level) != :lt do
       log_event(level, msg, ts, md, state)
     end
+    {:ok, state}
+  end
+
+  @doc false
+  def terminate(_reason, _state) do
+    :ok
+  end
+
+  @doc false
+  def code_change(_old, state, _extra) do
     {:ok, state}
   end
 
@@ -56,7 +75,7 @@ defmodule LogstashJson.TCP do
     Application.put_env(:logger, name, opts)
 
     level       = Keyword.get(opts, :level) || :debug
-    host        = opts |> Keyword.get(:host) |> env_var |> to_char_list
+    host        = opts |> Keyword.get(:host) |> env_var |> to_charlist
     port        = opts |> Keyword.get(:port) |> env_var |> to_int
     fields      = Keyword.get(opts, :fields) || %{}
     workers     = Keyword.get(opts, :workers) || 2

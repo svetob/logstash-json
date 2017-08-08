@@ -6,15 +6,18 @@ defmodule LogstashJson.Event do
 
   @doc "Generate a log event from log data"
   def event(level, msg, ts, md, %{fields: fields, utc_log: utc_log}) do
-    Map.merge(fields, %{
-      "@timestamp": timestamp(ts, utc_log),
-      level: level,
-      message: to_string(msg),
-      metadata: format_metadata(md),
-      module: md[:module],
-      function: md[:function],
-      line: md[:line]
-    })
+    fields
+    |> format_fields(%{
+        "@timestamp": timestamp(ts, utc_log),
+        level: level,
+        message: to_string(msg),
+        metadata: format_metadata(md),
+        module: md[:module],
+        function: md[:function],
+        line: md[:line],
+        include_in_parent: md[:include_in_parent]
+      }
+    )
   end
 
   @doc "Serialize a log event to a JSON string"
@@ -22,8 +25,23 @@ defmodule LogstashJson.Event do
     event |> print_pids |> Poison.encode()
   end
 
+  def format_fields(fields, field_overrides) do
+    fields
+    |> Map.merge(field_overrides)
+    |> include_in_parent(field_overrides[:include_in_parent])
+    |> Map.delete(:include_in_parent)
+  end
+
   defp format_metadata(metadata) do
-    metadata |> Enum.into(%{})
+    metadata
+    |> Enum.into(%{})
+    |> Map.delete(:include_in_parent)
+  end
+
+  defp include_in_parent(fields, nil), do: fields
+  defp include_in_parent(fields, metadata) do
+    fields
+    |> Map.merge(Map.drop(format_metadata(metadata), Map.keys(fields)))
   end
 
   # Functions for generating timestamp

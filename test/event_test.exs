@@ -23,22 +23,13 @@ defmodule EventTest do
     assert Map.get(event, :foo) == "bar"
   end
 
-  test "Joins extra fields defined in include_in_parent but does not overwrite existing fields" do
+  test "Joins metadata fields but does not overwrite existing fields" do
     message = "Meow the second"
-    event = log(message, %{}, [include_in_parent: %{foo: "bar", level: "fail", message: "fail"}])
+    event = log(message, %{}, [foo: "bar", level: "fail", message: "fail"])
 
     assert Map.get(event, :message) == message
     assert Map.get(event, :level) == :info
     assert Map.get(event, :foo) == "bar"
-  end
-
-  test "Joins extra fields defined in include_in_parent and removes from metadata" do
-    message = "Meow the second"
-    event = log(message, %{}, [include_in_parent: %{foo: "bar"}])
-
-    assert Map.get(event, :message) == message
-    assert Map.get(event, :foo) == "bar"
-    assert Map.get(event, :include_in_parent) == nil
   end
 
   test "Adds no timezone offset for utc_log" do

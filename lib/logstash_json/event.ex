@@ -14,8 +14,7 @@ defmodule LogstashJson.Event do
         metadata: format_metadata(md),
         module: md[:module],
         function: md[:function],
-        line: md[:line],
-        include_in_parent: md[:include_in_parent]
+        line: md[:line]
       }
     )
   end
@@ -28,20 +27,18 @@ defmodule LogstashJson.Event do
   def format_fields(fields, field_overrides) do
     fields
     |> Map.merge(field_overrides)
-    |> include_in_parent(field_overrides[:include_in_parent])
-    |> Map.delete(:include_in_parent)
+    |> include_in_parent(field_overrides[:metadata])
   end
 
   defp format_metadata(metadata) do
     metadata
     |> Enum.into(%{})
-    |> Map.delete(:include_in_parent)
   end
 
   defp include_in_parent(fields, nil), do: fields
   defp include_in_parent(fields, metadata) do
     fields
-    |> Map.merge(Map.drop(format_metadata(metadata), Map.keys(fields)))
+    |> Map.merge(Map.drop(metadata, Map.keys(fields)))
   end
 
   # Functions for generating timestamp

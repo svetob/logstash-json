@@ -67,7 +67,7 @@ defmodule LogstashJson.Event do
   # Traverse complex objects and inspect PID's to their string representation
   defp print_pids(it) when is_pid(it),   do: inspect(it)
   defp print_pids(it) when is_list(it),  do: Enum.map it, &print_pids/1
-  defp print_pids(it) when is_tuple(it), do: List.to_tuple(print_pids(Tuple.to_list(it)))
+  defp print_pids(it) when is_tuple(it), do: print_pids(Tuple.to_list(it))
   defp print_pids(%_{} = it),            do: print_pids(Map.from_struct(it))
   defp print_pids(it) when is_map(it),   do: Enum.into(it, %{}, fn {k, v} -> {k, print_pids(v)} end)
   defp print_pids(it), do: it

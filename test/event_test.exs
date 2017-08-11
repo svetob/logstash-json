@@ -64,6 +64,11 @@ defmodule EventTest do
     assert %{"message" => "Hello", "metadata" => %{"foo" => %{"bar" => "baz"}}} = event
   end
 
+  test "Serializes tuples to lists" do
+    event = log_json("Hello", %{}, [foo: {:bar, :baz}]) |> Poison.decode!()
+    assert %{"message" => "Hello", "metadata" => %{"foo" => ["bar", "baz"]}} = event
+  end
+
   defp log(msg, fields \\ %{}, metadata \\ []) do
     Event.event(:info, msg, {{2015, 1, 1}, {0, 0, 0, 0}}, metadata, %{
       fields: fields,

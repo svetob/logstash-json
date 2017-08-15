@@ -60,7 +60,7 @@ defmodule LogstashJsonTcpTest do
     :gen_event.stop(logger)
 
     event = Poison.decode!(msg)
-    assert event["metadata"]["car"]  == "Lamborghini"
+    assert event["car"] == "Lamborghini"
   end
 
   test "Sent messages include static fields" do

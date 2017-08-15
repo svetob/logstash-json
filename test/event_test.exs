@@ -14,7 +14,6 @@ defmodule EventTest do
 
     assert Map.get(event, :message) == message
     assert Map.get(event, :level) == :info
-    assert Map.get(event, :metadata) == %{}
     assert String.length(time) == 29
   end
 
@@ -65,17 +64,17 @@ defmodule EventTest do
 
   test "Includes metadata" do
     assert log("Hello", %{}, [foo: "Bar"])
-      |> Map.get(:metadata) == %{foo: "Bar"}
+      |> Map.get(:foo) == "Bar"
   end
 
   test "Serializes structs to maps" do
     event = log_json("Hello", %{}, [foo: %Foo{bar: "baz"}]) |> Poison.decode!()
-    assert %{"message" => "Hello", "metadata" => %{"foo" => %{"bar" => "baz"}}} = event
+    assert %{"message" => "Hello", "foo" => %{"bar" => "baz"}} = event
   end
 
   test "Serializes tuples to lists" do
     event = log_json("Hello", %{}, [foo: {:bar, :baz}]) |> Poison.decode!()
-    assert %{"message" => "Hello", "metadata" => %{"foo" => ["bar", "baz"]}} = event
+    assert %{"message" => "Hello", "foo" => ["bar", "baz"]} = event
   end
 
   defp log(msg, fields \\ %{}, metadata \\ []) do

@@ -65,8 +65,7 @@ defmodule LogstashJsonConsoleTest do
     end)
 
     event = Poison.decode!(io)
-    assert event["metadata"]["car"]  == "Lamborghini"
-
+    assert event["car"] == "Lamborghini"
   end
 
   test "Sent messages include static fields" do

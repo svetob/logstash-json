@@ -65,7 +65,7 @@ defmodule LogstashJson.Console do
       {:ok, log} ->
         IO.puts log
       {:error, reason} ->
-        IO.puts "Failed to serialize event. error: #{reason}, event: #{inspect event}"
+        IO.puts "Failed to serialize event. error: #{inspect reason}, event: #{inspect event}"
     end
   end
 end

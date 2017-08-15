@@ -2,6 +2,10 @@ defmodule EventTest do
   use ExUnit.Case, async: false
   alias LogstashJson.Event
 
+  defmodule Foo do
+    defstruct [:bar]
+  end
+
   test "Creates and serializes event" do
     message = "Meow meow"
     event = log(message)
@@ -64,6 +68,16 @@ defmodule EventTest do
       |> Map.get(:metadata) == %{foo: "Bar"}
   end
 
+  test "Serializes structs to maps" do
+    event = log_json("Hello", %{}, [foo: %Foo{bar: "baz"}]) |> Poison.decode!()
+    assert %{"message" => "Hello", "metadata" => %{"foo" => %{"bar" => "baz"}}} = event
+  end
+
+  test "Serializes tuples to lists" do
+    event = log_json("Hello", %{}, [foo: {:bar, :baz}]) |> Poison.decode!()
+    assert %{"message" => "Hello", "metadata" => %{"foo" => ["bar", "baz"]}} = event
+  end
+
   defp log(msg, fields \\ %{}, metadata \\ []) do
     Event.event(:info, msg, {{2015, 1, 1}, {0, 0, 0, 0}}, metadata, %{
       fields: fields,
@@ -71,8 +85,8 @@ defmodule EventTest do
     })
   end
 
-  defp log_json(msg, fields \\ %{}) do
-    {:ok, l} = Event.json(log(msg, fields))
+  defp log_json(msg, fields \\ %{}, metadata \\ []) do
+    {:ok, l} = Event.json(log(msg, fields, metadata))
     l
   end
 end

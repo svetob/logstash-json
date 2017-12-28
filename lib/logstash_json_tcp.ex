@@ -82,6 +82,18 @@ defmodule LogstashJson.TCP do
     worker_pool = Keyword.get(opts, :worker_pool) || nil
     buffer_size = Keyword.get(opts, :buffer_size) || 10_000
     utc_log     = Application.get_env(:logger, :utc_log, false)
+    formatter   =
+      case Keyword.get(opts, :formatter) || :undefined do
+        {module, function} ->
+          &apply(module, function, [&1])
+        fun when is_function(fun) ->
+          fun
+        :undefined ->
+          &(&1)
+        _ ->
+          # FIXME Really a configuration error.  What do we do with those?
+          &(&1)
+      end
 
     # Close previous worker pool
     if worker_pool != nil do
@@ -101,6 +113,7 @@ defmodule LogstashJson.TCP do
       name: name,
       queue: queue,
       worker_pool: worker_pool,
+      formatter: formatter,
       utc_log: utc_log}
   end
 

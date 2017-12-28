@@ -56,7 +56,7 @@ defmodule LogstashJson.Console do
     fields   = Keyword.get(opts, :fields) || %{}
     utc_log  = Application.get_env(:logger, :utc_log, false)
 
-    %{level: level, fields: fields, utc_log: utc_log}
+    %{level: level, fields: fields, utc_log: utc_log, formatter: &(&1)}
   end
 
   defp log_event(level, msg, ts, md, state) do

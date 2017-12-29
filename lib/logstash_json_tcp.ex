@@ -83,16 +83,15 @@ defmodule LogstashJson.TCP do
     buffer_size = Keyword.get(opts, :buffer_size) || 10_000
     utc_log     = Application.get_env(:logger, :utc_log, false)
     formatter   =
-      case Keyword.get(opts, :formatter) || :undefined do
+      case Keyword.get(opts, :formatter) do
         {module, function} ->
           &apply(module, function, [&1])
         fun when is_function(fun) ->
           fun
-        :undefined ->
+        nil ->
           &(&1)
-        _ ->
-          # FIXME Really a configuration error.  What do we do with those?
-          &(&1)
+        bad_formatter ->
+          raise "Bad formatter configured for :logger, #{name} -- #{inspect bad_formatter}"
       end
 
     # Close previous worker pool

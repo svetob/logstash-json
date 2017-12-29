@@ -39,6 +39,7 @@ defmodule EventTest do
     event = Event.event(:info, "", {{2015, 1, 1}, {0, 0, 0, 0}}, [], %{
       metadata: [],
       fields: %{},
+      formatter: &(&1),
       utc_log: true
     })
     assert Map.get(event, :"@timestamp") =~ "+00:00"
@@ -77,9 +78,15 @@ defmodule EventTest do
     assert %{"message" => "Hello", "foo" => ["bar", "baz"]} = event
   end
 
-  defp log(msg, fields \\ %{}, metadata \\ []) do
+  test "Formatter is used" do
+    assert log("Something", %{}, [], &(Map.put(&1, :hello, "there")))
+    |> Map.get(:hello) == "there"
+  end
+
+  defp log(msg, fields \\ %{}, metadata \\ [], formatter \\ &(&1)) do
     Event.event(:info, msg, {{2015, 1, 1}, {0, 0, 0, 0}}, metadata, %{
       fields: fields,
+      formatter: formatter,
       utc_log: false
     })
   end

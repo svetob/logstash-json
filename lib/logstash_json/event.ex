@@ -6,14 +6,15 @@ defmodule LogstashJson.Event do
 
   @doc "Generate a log event from log data"
   def event(level, msg, ts, md, %{fields: fields, utc_log: utc_log, formatter: formatter}) do
-    format_fields(fields, md, %{
-      "@timestamp": timestamp(ts, utc_log),
-      level: level,
-      message: to_string(msg),
-      module: md[:module],
-      function: md[:function],
-      line: md[:line]
-    })
+    fields
+    |> format_fields(md, %{
+          "@timestamp": timestamp(ts, utc_log),
+          level: level,
+          message: to_string(msg),
+          module: md[:module],
+          function: md[:function],
+          line: md[:line]
+       })
     |> formatter.()
   end
 

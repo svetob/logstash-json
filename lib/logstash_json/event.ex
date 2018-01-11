@@ -35,6 +35,24 @@ defmodule LogstashJson.Event do
     |> Enum.into(%{})
   end
 
+  def resolve_formatter_config(formatter_spec, default_formatter \\ &(&1)) do
+    # Find an appropriate formatter, if possible, from this config spec.
+    case formatter_spec do
+      {module, function} ->
+        if Keyword.has_key?(module.__info__(:functions), function) do
+          {:ok, &apply(module, function, [&1])}
+        else
+          {:error, {module, function}}
+        end
+      fun when is_function(fun) ->
+        {:ok, fun}
+      nil ->
+        {:ok, default_formatter}
+      bad_formatter ->
+        {:error, bad_formatter}
+    end
+  end
+
   # Functions for generating timestamp
   defp timestamp(ts, utc_log) do
     datetime(ts) <> timezone(utc_log)

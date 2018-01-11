@@ -56,16 +56,11 @@ defmodule LogstashJson.Console do
     fields   = Keyword.get(opts, :fields) || %{}
     utc_log  = Application.get_env(:logger, :utc_log, false)
     formatter   =
-      case Keyword.get(opts, :formatter) || :undefined do
-        {module, function} ->
-          &apply(module, function, [&1])
-        fun when is_function(fun) ->
+      case LogstashJson.Event.resolve_formatter_config(Keyword.get(opts, :formatter)) do
+        {:ok, fun} ->
           fun
-        :undefined ->
-          &(&1)
-        _ ->
-          # FIXME Really a configuration error.  What do we do with those?
-          &(&1)
+        {:error, bad_formatter} ->
+          raise "Bad formatter configured for :logger, #{name} -- #{inspect bad_formatter}"
       end
 
     %{level: level, fields: fields, utc_log: utc_log, formatter: formatter}

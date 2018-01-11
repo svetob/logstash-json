@@ -68,24 +68,6 @@ defmodule LogstashJson.TCP do
     BlockingQueue.push(queue, log <> "\n")
   end
 
-  defp resolve_formatter(formatter_spec, default_formatter \\ &(&1)) do
-    # Find an appropriate formatter, if possible, from this spec.
-    case formatter_spec do
-      {module, function} ->
-        if Keyword.has_key?(module.__info__(:functions), function) do
-          {:ok, &apply(module, function, [&1])}
-        else
-          {:error, {module, function}}
-        end
-      fun when is_function(fun) ->
-        {:ok, fun}
-      nil ->
-        {:ok, default_formatter}
-      bad_formatter ->
-        {:error, bad_formatter}
-    end
-  end
-
   defp configure(name, opts) do
     env = Application.get_env(:logger, name, [])
     opts = Keyword.merge(env, opts)
@@ -100,7 +82,7 @@ defmodule LogstashJson.TCP do
     buffer_size = Keyword.get(opts, :buffer_size) || 10_000
     utc_log     = Application.get_env(:logger, :utc_log, false)
     formatter   =
-      case resolve_formatter(Keyword.get(opts, :formatter)) do
+      case LogstashJson.Event.resolve_formatter_config(Keyword.get(opts, :formatter)) do
         {:ok, fun} ->
           fun
         {:error, bad_formatter} ->

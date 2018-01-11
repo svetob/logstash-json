@@ -82,6 +82,23 @@ defmodule LogstashJsonConsoleTest do
     assert event["test_field"] == "test_value"
   end
 
+  test "Formatter formats message" do
+    opts = :logger
+      |> Application.get_env(:json)
+      |> Keyword.put(:formatter, fn (event) -> Map.put(event, :added_by_formatter, "I am extra") end)
+    Application.put_env(:logger, :json, opts)
+    io = capture_io(fn ->
+      logger = new_logger()
+      log(logger, "Hello world!")
+      :gen_event.stop(logger)
+    end)
+
+    event = Poison.decode!(io)
+    assert event["message"] == "Hello world!"
+    assert event["level"] == "info"
+    assert event["added_by_formatter"] == "I am extra"
+  end
+
   defp new_logger do
     {:ok, manager} = :gen_event.start_link()
     :gen_event.add_handler(manager, LogstashJson.Console, {LogstashJson.Console, :json})

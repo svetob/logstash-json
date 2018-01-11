@@ -99,7 +99,7 @@ defmodule LogstashJsonTcpTest do
     {listener, new_logger(port, logger_name)}
   end
 
-  defp new_logger(port, logger_name \\ :logstash) do
+  defp new_logger(port, logger_name) do
     opts = :logger |> Application.get_env(logger_name) |> Keyword.put(:port, "#{port}")
     Application.put_env(:logger, logger_name, opts)
 

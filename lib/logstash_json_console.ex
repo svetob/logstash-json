@@ -55,8 +55,20 @@ defmodule LogstashJson.Console do
     level    = Keyword.get(opts, :level)
     fields   = Keyword.get(opts, :fields) || %{}
     utc_log  = Application.get_env(:logger, :utc_log, false)
+    formatter   =
+      case Keyword.get(opts, :formatter) || :undefined do
+        {module, function} ->
+          &apply(module, function, [&1])
+        fun when is_function(fun) ->
+          fun
+        :undefined ->
+          &(&1)
+        _ ->
+          # FIXME Really a configuration error.  What do we do with those?
+          &(&1)
+      end
 
-    %{level: level, fields: fields, utc_log: utc_log, formatter: &(&1)}
+    %{level: level, fields: fields, utc_log: utc_log, formatter: formatter}
   end
 
   defp log_event(level, msg, ts, md, state) do

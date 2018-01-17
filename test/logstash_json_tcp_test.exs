@@ -78,18 +78,33 @@ defmodule LogstashJsonTcpTest do
     assert event["test_field"] == "test_value"
   end
 
-  defp new_backend do
-    {:ok, listener} = :gen_tcp.listen 0, [:binary, {:active, false}, {:packet, 0}, {:reuseaddr, true}]
-    {:ok, port} = :inet.port listener
-    {listener, new_logger(port)}
+  test "Formatter formats message" do
+    {listener, logger} = new_backend(:logstash_with_formatter)
+    # {listener, logger} = new_backend()
+
+    log(logger, "Hello formatted world!")
+
+    msg = recv_and_close(listener)
+    :gen_event.stop(logger)
+
+    event = Poison.decode!(msg)
+    assert event["message"] == "Hello formatted world!"
+    assert event["level"] == "info"
+    assert event["added_by_formatter"] == "I am extra"
   end
 
-  defp new_logger(port) do
-    opts = :logger |> Application.get_env(:logstash) |> Keyword.put(:port, "#{port}")
-    Application.put_env(:logger, :logstash, opts)
+  defp new_backend(logger_name \\ :logstash) do
+    {:ok, listener} = :gen_tcp.listen 0, [:binary, {:active, false}, {:packet, 0}, {:reuseaddr, true}]
+    {:ok, port} = :inet.port listener
+    {listener, new_logger(port, logger_name)}
+  end
+
+  defp new_logger(port, logger_name) do
+    opts = :logger |> Application.get_env(logger_name) |> Keyword.put(:port, "#{port}")
+    Application.put_env(:logger, logger_name, opts)
 
     {:ok, manager} = :gen_event.start_link()
-    :gen_event.add_handler(manager, LogstashJson.TCP, {LogstashJson.TCP, :logstash})
+    :gen_event.add_handler(manager, LogstashJson.TCP, {LogstashJson.TCP, logger_name})
     manager
   end
 

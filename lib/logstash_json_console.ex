@@ -55,8 +55,15 @@ defmodule LogstashJson.Console do
     level    = Keyword.get(opts, :level)
     fields   = Keyword.get(opts, :fields) || %{}
     utc_log  = Application.get_env(:logger, :utc_log, false)
+    formatter   =
+      case LogstashJson.Event.resolve_formatter_config(Keyword.get(opts, :formatter)) do
+        {:ok, fun} ->
+          fun
+        {:error, bad_formatter} ->
+          raise "Bad formatter configured for :logger, #{name} -- #{inspect bad_formatter}"
+      end
 
-    %{level: level, fields: fields, utc_log: utc_log}
+    %{level: level, fields: fields, utc_log: utc_log, formatter: formatter}
   end
 
   defp log_event(level, msg, ts, md, state) do

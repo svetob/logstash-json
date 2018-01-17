@@ -68,7 +68,6 @@ defmodule LogstashJson.TCP do
     BlockingQueue.push(queue, log <> "\n")
   end
 
-
   defp configure(name, opts) do
     env = Application.get_env(:logger, name, [])
     opts = Keyword.merge(env, opts)
@@ -82,6 +81,13 @@ defmodule LogstashJson.TCP do
     worker_pool = Keyword.get(opts, :worker_pool) || nil
     buffer_size = Keyword.get(opts, :buffer_size) || 10_000
     utc_log     = Application.get_env(:logger, :utc_log, false)
+    formatter   =
+      case LogstashJson.Event.resolve_formatter_config(Keyword.get(opts, :formatter)) do
+        {:ok, fun} ->
+          fun
+        {:error, bad_formatter} ->
+          raise "Bad formatter configured for :logger, #{name} -- #{inspect bad_formatter}"
+      end
 
     # Close previous worker pool
     if worker_pool != nil do
@@ -101,6 +107,7 @@ defmodule LogstashJson.TCP do
       name: name,
       queue: queue,
       worker_pool: worker_pool,
+      formatter: formatter,
       utc_log: utc_log}
   end
 

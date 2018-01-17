@@ -5,15 +5,17 @@ defmodule LogstashJson.Event do
   """
 
   @doc "Generate a log event from log data"
-  def event(level, msg, ts, md, %{fields: fields, utc_log: utc_log}) do
-    format_fields(fields, md, %{
-      "@timestamp": timestamp(ts, utc_log),
-      level: level,
-      message: to_string(msg),
-      module: md[:module],
-      function: md[:function],
-      line: md[:line]
-    })
+  def event(level, msg, ts, md, %{fields: fields, utc_log: utc_log, formatter: formatter}) do
+    fields
+    |> format_fields(md, %{
+          "@timestamp": timestamp(ts, utc_log),
+          level: level,
+          message: to_string(msg),
+          module: md[:module],
+          function: md[:function],
+          line: md[:line]
+       })
+    |> formatter.()
   end
 
   @doc "Serialize a log event to a JSON string"
@@ -31,6 +33,24 @@ defmodule LogstashJson.Event do
   defp format_metadata(metadata) do
     metadata
     |> Enum.into(%{})
+  end
+
+  def resolve_formatter_config(formatter_spec, default_formatter \\ &(&1)) do
+    # Find an appropriate formatter, if possible, from this config spec.
+    case formatter_spec do
+      {module, function} ->
+        if Keyword.has_key?(module.__info__(:functions), function) do
+          {:ok, &apply(module, function, [&1])}
+        else
+          {:error, {module, function}}
+        end
+      fun when is_function(fun) ->
+        {:ok, fun}
+      nil ->
+        {:ok, default_formatter}
+      bad_formatter ->
+        {:error, bad_formatter}
+    end
   end
 
   # Functions for generating timestamp

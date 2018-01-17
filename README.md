@@ -31,6 +31,7 @@ config :logger,
 config :logger, :logstash,
   level: :debug,
   fields: %{appid: "my-app"},
+  formatter: {MyApp, :formatter},
   host: {:system, "LOGSTASH_TCP_HOST", "localhost"},
   port: {:system, "LOGSTASH_TCP_PORT", "4560"},
   workers: 2,
@@ -43,6 +44,7 @@ The parameters are:
 - __workers__: Number of TCP workers, each worker opens a new TCP connection. (Default: 2)
 - __buffer_size__: Size of internal message buffer, used when logs are generated faster than logstash can consume them. (Default: 10_000)
 - __fields__: Additional fields to add to the JSON payload, such as appid. (Default: none)
+- __formatter__: Function to format TCP output. Can be either a function or a reference to a function in the form `{MyModule, :my_functiotn_name}` The function itself takes a Map and returns a possibly altered Map. (Default: `&(&1)`)
 
 The TCP logger handles various failure scenarios differently:
 - If the internal message buffer fills up, logging new messages __blocks__ until more messages are sent and there is space available in the buffer again.
@@ -112,7 +114,54 @@ defmodule LoggerMetadata do
 end
 ```
 
+#### Using a Formatter
+Using the example TCP logger backend configuration above (minus the :console backend) with the following code:
 
+```Eilxir
+defmodule MyApp do
+  require Logger
+
+  def level_name_to_syslog_level(level_name, default_level \\ 6) do
+     case level_name do
+        :error -> 3
+        :warn -> 4
+        :info -> 6
+        :debug -> 7
+        level when is_integer(level) -> level
+        _ -> default_level
+     end
+  end
+
+  def formatter(event) do
+    event
+    |> Map.put(:level, level_name_to_syslog_level(event[:level]))
+    |> Map.put(:beam_pid, event[:pid])
+    |> Map.delete(:pid)
+    |> Map.delete(:file)
+    |> Map.delete(:line)
+  end
+
+  def try_to_log(message) do
+    Logger.info(message)
+  end
+end
+```
+
+```Elixir
+iex(1)> require Logger
+Logger
+iex(2)> Logger.error("an error")
+:ok
+iex(3)> MyApp.try_to_log("hello there")
+:ok
+iex(4)>
+```
+
+Results in the following being sent via TCP:
+```JSON
+{"module":null,"message":"an error","level":3,"function":null,"beam_pid":"#PID<0.206.0>","appid":"my-app","@timestamp":"2017-12-29T19:16:29.397+00:00"}
+{"module":"Elixir.MyApp","message":"hello there","level":6,"function":"try_to_log/1","beam_pid":"#PID<0.206.0>","application":"thing","appid":"my-app","@timestamp":"2017-12-29T19:16:42.434+00:00"}
+```
 
 ## TODO list
 

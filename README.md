@@ -1,4 +1,4 @@
-# logstash-json
+# logstash-json ![](https://travis-ci.org/svetob/logstash-json.svg?branch=master)
 
 Elixir Logger backend which sends logs to logstash in JSON format via TCP.
 
@@ -80,7 +80,7 @@ iex(3)> Logger.info "Test"
 iex(4)> Logger.info "Test", [foo: "bar"]
 {"status":200,"pid":"#PID<0.160.0>","module":null,"method":"GET","metadata":{"status":200,"pid":"#PID<0.160.0>","module":null,"method":"GET","line":5,"function":null,"foo":"bar","file":"iex"},"message":"Test","line":5,"level":"info","function":null,"foo":"bar","file":"iex","@timestamp":"2017-08-09T15:48:36.910+02:00"}
 ```
- 
+
 Here is an example plug for setting the Metadata
 
 ```Elixir

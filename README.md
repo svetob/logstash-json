@@ -162,7 +162,3 @@ Results in the following being sent via TCP:
 {"module":null,"message":"an error","level":3,"function":null,"beam_pid":"#PID<0.206.0>","appid":"my-app","@timestamp":"2017-12-29T19:16:29.397+00:00"}
 {"module":"Elixir.MyApp","message":"hello there","level":6,"function":"try_to_log/1","beam_pid":"#PID<0.206.0>","application":"thing","appid":"my-app","@timestamp":"2017-12-29T19:16:42.434+00:00"}
 ```
-
-## TODO list
-
-- UDP appender?

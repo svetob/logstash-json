@@ -96,6 +96,14 @@ defmodule LogstashJson.Event do
   defp print_pids(it) when is_list(it),  do: Enum.map it, &print_pids/1
   defp print_pids(it) when is_tuple(it), do: print_pids(Tuple.to_list(it))
   defp print_pids(%_{} = it),            do: print_pids(Map.from_struct(it))
-  defp print_pids(it) when is_map(it),   do: Enum.into(it, %{}, fn {k, v} -> {k, print_pids(v)} end)
+  defp print_pids(it) when is_map(it),   do: Enum.into(it, %{}, fn {k, v} -> {print_pids(k), print_pids(v)} end)
+  defp print_pids(it) when is_binary(it) do
+    it
+    |> String.valid?
+    |> case do
+      true -> it
+      false -> inspect(it)
+    end
+  end
   defp print_pids(it), do: it
 end

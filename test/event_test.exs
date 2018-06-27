@@ -78,6 +78,18 @@ defmodule EventTest do
     assert %{"message" => "Hello", "foo" => ["bar", "baz"]} = event
   end
 
+  test "Inspect non-string binaries" do
+    binary = <<171, 152, 70, 16, 37>>
+    assert String.valid?(binary) == false
+
+    binary_inspected = inspect(binary)
+    event = log_json(binary, %{foo: binary}, bar: binary) |> Poison.decode!()
+
+    assert event["message"] == binary_inspected
+    assert event["bar"] == binary_inspected
+    assert event["foo"] == binary_inspected
+  end
+
   test "Formatter is used" do
     assert log("Something", %{}, [], &(Map.put(&1, :hello, "there")))
     |> Map.get(:hello) == "there"

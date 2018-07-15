@@ -14,6 +14,7 @@ defmodule EventTest do
 
     assert Map.get(event, :message) == message
     assert Map.get(event, :level) == :info
+    assert String.starts_with?(time, "2015-04-19T08:15:03.000")
     assert String.length(time) == 29
   end
 
@@ -96,7 +97,7 @@ defmodule EventTest do
   end
 
   defp log(msg, fields \\ %{}, metadata \\ [], formatter \\ &(&1)) do
-    Event.event(:info, msg, {{2015, 1, 1}, {0, 0, 0, 0}}, metadata, %{
+    Event.event(:info, msg, {{2015, 4, 19}, {8, 15, 3, 28}}, metadata, %{
       fields: fields,
       formatter: formatter,
       utc_log: false

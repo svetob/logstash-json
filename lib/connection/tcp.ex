@@ -48,7 +48,7 @@ defmodule LogstashJson.TCP.Connection do
         {:ok, %{state | sock: sock}}
       {:error, reason} ->
         connect_error_log(id, reason, host, port)
-        {:backoff, 1000, state}
+        {:backoff, @backoff_ms, state}
     end
   end
   def connect(_info, %{sock: nil, host: host, port: port, timeout: timeout} = state) do
@@ -73,7 +73,7 @@ defmodule LogstashJson.TCP.Connection do
 
   # Drop message and attempt to reconnect if no connection is open
   def handle_call({:send, _data}, _from, %{sock: nil} = state) do
-    {:reply, :ok, state}
+    {:connect, :reconnect, state}
   end
 
   def handle_call({:send, data}, _from, %{id: id, sock: sock} = state) do

@@ -33,10 +33,6 @@ defmodule LogstashJson.TCP do
     {:ok, state}
   end
 
-  def handle_event({_level, gl, {Logger, _, _, _}}, state) when node(gl) != node() do
-    {:ok, state}
-  end
-
   def handle_event({level, _gl, {Logger, msg, ts, md}}, %{level: min_level} = state) do
     if is_nil(min_level) or Logger.compare_levels(level, min_level) != :lt do
       log_event(level, msg, ts, md, state)

@@ -73,7 +73,7 @@ defmodule LogstashJson.TCP.Connection do
 
   # Drop message and attempt to reconnect if no connection is open
   def handle_call({:send, _data}, _from, %{sock: nil} = state) do
-    {:connect, :reconnect, state}
+    {:reply, :ok, state}
   end
 
   def handle_call({:send, data}, _from, %{id: id, sock: sock} = state) do

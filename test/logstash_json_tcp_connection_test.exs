@@ -25,8 +25,8 @@ defmodule LogstashJsonTcpConnectionTest do
     {:ok, socket} = :gen_tcp.accept(listener, 1000)
     LogstashJson.TCP.Connection.send(conn, "Three\n")
     {:ok, msg} = :gen_tcp.recv(socket, 0, 5000)
-    :ok = :gen_tcp.close socket
-    :ok = :gen_tcp.close listener
+    :ok = :gen_tcp.close(socket)
+    :ok = :gen_tcp.close(listener)
 
     assert msg == "Three\n"
   end
@@ -43,16 +43,18 @@ defmodule LogstashJsonTcpConnectionTest do
   end
 
   defp new_listener() do
-    {:ok, listener} = :gen_tcp.listen 0, [:binary, {:active, false}, {:packet, 0}, {:reuseaddr, true}]
-    {:ok, port} = :inet.port listener
+    {:ok, listener} =
+      :gen_tcp.listen(0, [:binary, {:active, false}, {:packet, 0}, {:reuseaddr, true}])
+
+    {:ok, port} = :inet.port(listener)
     {listener, port}
   end
 
   defp recv_and_close(listener) do
     {:ok, socket} = :gen_tcp.accept(listener, 1000)
     {:ok, msg} = :gen_tcp.recv(socket, 0, 1000)
-    :ok = :gen_tcp.close socket
-    :ok = :gen_tcp.close listener
+    :ok = :gen_tcp.close(socket)
+    :ok = :gen_tcp.close(listener)
     msg
   end
 end

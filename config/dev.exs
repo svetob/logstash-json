@@ -5,5 +5,4 @@ config :logger,
     {LogstashJson.Console, :json}
   ]
 
-config :logger, :json,
-  level: :info
+config :logger, :json, level: :info

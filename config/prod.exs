@@ -14,5 +14,4 @@ config :logger, :logstash,
   workers: 2,
   buffer_size: 10_000
 
-config :logger, :json,
-  level: :info
+config :logger, :json, level: :info

@@ -1,5 +1,4 @@
 defmodule LogstashJson.Event do
-
   @moduledoc """
   This module contains functions for generating and serializing logs events.
   """
@@ -8,13 +7,13 @@ defmodule LogstashJson.Event do
   def event(level, msg, ts, md, %{fields: fields, utc_log: utc_log, formatter: formatter}) do
     fields
     |> format_fields(md, %{
-          "@timestamp": timestamp(ts, utc_log),
-          level: level,
-          message: to_string(msg),
-          module: md[:module],
-          function: md[:function],
-          line: md[:line]
-       })
+      "@timestamp": timestamp(ts, utc_log),
+      level: level,
+      message: to_string(msg),
+      module: md[:module],
+      function: md[:function],
+      line: md[:line]
+    })
     |> formatter.()
   end
 
@@ -35,7 +34,7 @@ defmodule LogstashJson.Event do
     |> Enum.into(%{})
   end
 
-  def resolve_formatter_config(formatter_spec, default_formatter \\ &(&1)) do
+  def resolve_formatter_config(formatter_spec, default_formatter \\ & &1) do
     # Find an appropriate formatter, if possible, from this config spec.
     case formatter_spec do
       {module, function} ->
@@ -44,10 +43,13 @@ defmodule LogstashJson.Event do
         else
           {:error, {module, function}}
         end
+
       fun when is_function(fun) ->
         {:ok, fun}
+
       nil ->
         {:ok, default_formatter}
+
       bad_formatter ->
         {:error, bad_formatter}
     end
@@ -69,7 +71,7 @@ defmodule LogstashJson.Event do
   defp timezone() do
     offset = timezone_offset()
     minute = offset |> abs() |> rem(3600) |> div(60)
-    hour   = offset |> abs() |> div(3600)
+    hour = offset |> abs() |> div(3600)
     sign(offset) <> zero_pad(hour, 2) <> ":" <> zero_pad(minute, 2)
   end
 
@@ -84,7 +86,7 @@ defmodule LogstashJson.Event do
   end
 
   defp sign(total) when total < 0, do: "-"
-  defp sign(_),                    do: "+"
+  defp sign(_), do: "+"
 
   defp zero_pad(val, count) do
     num = Integer.to_string(val)
@@ -92,18 +94,22 @@ defmodule LogstashJson.Event do
   end
 
   # Traverse complex objects and inspect PID's to their string representation
-  defp print_pids(it) when is_pid(it),   do: inspect(it)
-  defp print_pids(it) when is_list(it),  do: Enum.map it, &print_pids/1
+  defp print_pids(it) when is_pid(it), do: inspect(it)
+  defp print_pids(it) when is_list(it), do: Enum.map(it, &print_pids/1)
   defp print_pids(it) when is_tuple(it), do: print_pids(Tuple.to_list(it))
-  defp print_pids(%_{} = it),            do: print_pids(Map.from_struct(it))
-  defp print_pids(it) when is_map(it),   do: Enum.into(it, %{}, fn {k, v} -> {print_pids(k), print_pids(v)} end)
+  defp print_pids(%_{} = it), do: print_pids(Map.from_struct(it))
+
+  defp print_pids(it) when is_map(it),
+    do: Enum.into(it, %{}, fn {k, v} -> {print_pids(k), print_pids(v)} end)
+
   defp print_pids(it) when is_binary(it) do
     it
-    |> String.valid?
+    |> String.valid?()
     |> case do
       true -> it
       false -> inspect(it)
     end
   end
+
   defp print_pids(it), do: it
 end

@@ -57,16 +57,20 @@ defmodule EventTest do
   end
 
   test "Formats message" do
-    message = ["Hello", 32, 'wo', ["rl", 'd!']]
+    message =
+      ["Hello", 32, 'wo', ["rl", 'd!']]
       |> log()
       |> Map.get(:message)
+
     assert message == "Hello world!"
   end
 
   test "Handle lists such as [1, 2 | 3]" do
-    message = ["a", "b" | "c"]
+    message =
+      ["a", "b" | "c"]
       |> log()
       |> Map.get(:message)
+
     assert message == "abc"
   end
 

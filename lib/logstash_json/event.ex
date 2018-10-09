@@ -63,7 +63,7 @@ defmodule LogstashJson.Event do
     NaiveDateTime.to_iso8601(ndt, :extended)
   end
 
-  defp timezone(_utc_true = true), do: "+00:00"
+  defp timezone(true), do: "+00:00"
   defp timezone(_), do: timezone()
 
   defp timezone() do

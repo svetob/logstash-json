@@ -50,20 +50,24 @@ defmodule EventTest do
 
   test "Converts event to json" do
     message = "Meowson the third"
-    event = log_json(message) |> Poison.decode!()
+    event = message |> log_json() |> Poison.decode!()
 
     assert Map.get(event, "message") == message
     assert Map.get(event, "level") == "info"
   end
 
   test "Formats message" do
-    assert log(["Hello", 32, 'wo', ["rl", 'd!']])
-           |> Map.get(:message) == "Hello world!"
+    message = ["Hello", 32, 'wo', ["rl", 'd!']]
+      |> log()
+      |> Map.get(:message)
+    assert message == "Hello world!"
   end
 
   test "Handle lists such as [1, 2 | 3]" do
-    assert log(["a", "b" | "c"])
-           |> Map.get(:message) == "abc"
+    message = ["a", "b" | "c"]
+      |> log()
+      |> Map.get(:message)
+    assert message == "abc"
   end
 
   test "Includes metadata" do
@@ -86,7 +90,7 @@ defmodule EventTest do
     assert String.valid?(binary) == false
 
     binary_inspected = inspect(binary)
-    event = log_json(binary, %{foo: binary}, bar: binary) |> Poison.decode!()
+    event = binary |> log_json(%{foo: binary}, bar: binary) |> Poison.decode!()
 
     assert event["message"] == binary_inspected
     assert event["bar"] == binary_inspected

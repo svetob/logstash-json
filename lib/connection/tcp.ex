@@ -33,12 +33,7 @@ defmodule LogstashJson.TCP.Connection do
   def init({host, port, queue, id, timeout}) do
     LogstashJson.TCP.Connection.Worker.start_link(self(), queue)
 
-    state = %{
-      id: id,
-      host: host,
-      port: port,
-      timeout: timeout,
-      sock: nil}
+    state = %{id: id, host: host, port: port, timeout: timeout, sock: nil}
     {:connect, :init, state}
   end
 
@@ -46,15 +41,18 @@ defmodule LogstashJson.TCP.Connection do
     case :gen_tcp.connect(host, port, @connection_opts, timeout) do
       {:ok, sock} ->
         {:ok, %{state | sock: sock}}
+
       {:error, reason} ->
         connect_error_log(id, reason, host, port)
         {:backoff, @backoff_ms, state}
     end
   end
+
   def connect(_info, %{sock: nil, host: host, port: port, timeout: timeout} = state) do
     case :gen_tcp.connect(host, port, @connection_opts, timeout) do
       {:ok, sock} ->
         {:ok, %{state | sock: sock}}
+
       {:error, _reason} ->
         {:backoff, @backoff_ms, state}
     end
@@ -64,10 +62,12 @@ defmodule LogstashJson.TCP.Connection do
     if sock != nil do
       :ok = :gen_tcp.close(sock)
     end
+
     case info do
       {:close, from} -> Connection.reply(from, :ok)
       {:error, reason} -> disconnect_error_log(id, reason, host, port)
     end
+
     {:backoff, @backoff_ms, %{state | sock: nil}}
   end
 
@@ -80,8 +80,10 @@ defmodule LogstashJson.TCP.Connection do
     case :gen_tcp.send(sock, data) do
       :ok ->
         {:reply, :ok, state}
+
       {:error, :closed} = error ->
         {:disconnect, error, error, state}
+
       {:error, reason} = error ->
         send_error_log(id, reason)
         {:disconnect, error, error, state}
@@ -93,9 +95,7 @@ defmodule LogstashJson.TCP.Connection do
   end
 
   def handle_call({:configure, host, port}, from, state) do
-    {:disconnect, {:close, from}, %{state |
-      host: host,
-      port: port}}
+    {:disconnect, {:close, from}, %{state | host: host, port: port}}
   end
 
   def terminate(_, %{sock: sock}) do
@@ -106,18 +106,21 @@ defmodule LogstashJson.TCP.Connection do
 
   defp connect_error_log(id, reason, host, port) do
     reason = :inet.format_error(reason)
-    IO.puts "#{__MODULE__}[#{id}]: #{host}:#{inspect port} connection failed: #{reason}"
+    IO.puts("#{__MODULE__}[#{id}]: #{host}:#{inspect(port)} connection failed: #{reason}")
   end
+
   defp disconnect_error_log(id, :closed, host, port) do
-    IO.puts "#{__MODULE__}[#{id}]: #{host}:#{inspect port} connection closed"
+    IO.puts("#{__MODULE__}[#{id}]: #{host}:#{inspect(port)} connection closed")
   end
+
   defp disconnect_error_log(id, reason, host, port) do
     reason = :inet.format_error(reason)
-    IO.puts "#{__MODULE__}[#{id}]: #{host}:#{inspect port} connection error: #{reason}"
+    IO.puts("#{__MODULE__}[#{id}]: #{host}:#{inspect(port)} connection error: #{reason}")
   end
+
   defp send_error_log(id, reason) do
     reason = :inet.format_error(reason)
-    IO.puts "#{__MODULE__}[#{id}]: error sending over TCP: #{reason}"
+    IO.puts("#{__MODULE__}[#{id}]: error sending over TCP: #{reason}")
   end
 end
 
@@ -128,7 +131,7 @@ defmodule LogstashJson.TCP.Connection.Worker do
   """
 
   def start_link(conn, queue) do
-    spawn_link fn -> consume_messages(conn, queue) end
+    spawn_link(fn -> consume_messages(conn, queue) end)
   end
 
   defp consume_messages(conn, queue) do

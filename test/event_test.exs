@@ -29,7 +29,7 @@ defmodule EventTest do
 
   test "Joins metadata fields but does not overwrite existing fields" do
     message = "Meow the second"
-    event = log(message, %{}, [foo: "bar", level: "fail", message: "fail"])
+    event = log(message, %{}, foo: "bar", level: "fail", message: "fail")
 
     assert Map.get(event, :message) == message
     assert Map.get(event, :level) == :info
@@ -37,12 +37,14 @@ defmodule EventTest do
   end
 
   test "Adds no timezone offset for utc_log" do
-    event = Event.event(:info, "", {{2015, 1, 1}, {0, 0, 0, 0}}, [], %{
-      metadata: [],
-      fields: %{},
-      formatter: &(&1),
-      utc_log: true
-    })
+    event =
+      Event.event(:info, "", {{2015, 1, 1}, {0, 0, 0, 0}}, [], %{
+        metadata: [],
+        fields: %{},
+        formatter: & &1,
+        utc_log: true
+      })
+
     assert Map.get(event, :"@timestamp") =~ "+00:00"
   end
 
@@ -56,26 +58,26 @@ defmodule EventTest do
 
   test "Formats message" do
     assert log(["Hello", 32, 'wo', ["rl", 'd!']])
-      |> Map.get(:message) == "Hello world!"
+           |> Map.get(:message) == "Hello world!"
   end
 
   test "Handle lists such as [1, 2 | 3]" do
     assert log(["a", "b" | "c"])
-      |> Map.get(:message) == "abc"
+           |> Map.get(:message) == "abc"
   end
 
   test "Includes metadata" do
-    assert log("Hello", %{}, [foo: "Bar"])
-      |> Map.get(:foo) == "Bar"
+    assert log("Hello", %{}, foo: "Bar")
+           |> Map.get(:foo) == "Bar"
   end
 
   test "Serializes structs to maps" do
-    event = log_json("Hello", %{}, [foo: %Foo{bar: "baz"}]) |> Poison.decode!()
+    event = log_json("Hello", %{}, foo: %Foo{bar: "baz"}) |> Poison.decode!()
     assert %{"message" => "Hello", "foo" => %{"bar" => "baz"}} = event
   end
 
   test "Serializes tuples to lists" do
-    event = log_json("Hello", %{}, [foo: {:bar, :baz}]) |> Poison.decode!()
+    event = log_json("Hello", %{}, foo: {:bar, :baz}) |> Poison.decode!()
     assert %{"message" => "Hello", "foo" => ["bar", "baz"]} = event
   end
 
@@ -92,11 +94,11 @@ defmodule EventTest do
   end
 
   test "Formatter is used" do
-    assert log("Something", %{}, [], &(Map.put(&1, :hello, "there")))
-    |> Map.get(:hello) == "there"
+    assert log("Something", %{}, [], &Map.put(&1, :hello, "there"))
+           |> Map.get(:hello) == "there"
   end
 
-  defp log(msg, fields \\ %{}, metadata \\ [], formatter \\ &(&1)) do
+  defp log(msg, fields \\ %{}, metadata \\ [], formatter \\ & &1) do
     Event.event(:info, msg, {{2015, 4, 19}, {8, 15, 3, 28}}, metadata, %{
       fields: fields,
       formatter: formatter,

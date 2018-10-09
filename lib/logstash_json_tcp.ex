@@ -37,6 +37,7 @@ defmodule LogstashJson.TCP do
     if is_nil(min_level) or Logger.compare_levels(level, min_level) != :lt do
       log_event(level, msg, ts, md, state)
     end
+
     {:ok, state}
   end
 
@@ -52,11 +53,13 @@ defmodule LogstashJson.TCP do
 
   defp log_event(level, msg, ts, md, state) do
     event = LogstashJson.Event.event(level, msg, ts, md, state)
+
     case LogstashJson.Event.json(event) do
       {:ok, log} ->
         send_log(log, state)
+
       {:error, reason} ->
-        IO.puts "Failed to serialize event. error: #{reason}, event: #{inspect event}"
+        IO.puts("Failed to serialize event. error: #{reason}, event: #{inspect(event)}")
     end
   end
 
@@ -69,20 +72,22 @@ defmodule LogstashJson.TCP do
     opts = Keyword.merge(env, opts)
     Application.put_env(:logger, name, opts)
 
-    level       = Keyword.get(opts, :level) || :debug
-    host        = opts |> Keyword.get(:host) |> env_var |> to_charlist
-    port        = opts |> Keyword.get(:port) |> env_var |> to_int
-    fields      = Keyword.get(opts, :fields) || %{}
-    workers     = Keyword.get(opts, :workers) || 2
+    level = Keyword.get(opts, :level) || :debug
+    host = opts |> Keyword.get(:host) |> env_var |> to_charlist
+    port = opts |> Keyword.get(:port) |> env_var |> to_int
+    fields = Keyword.get(opts, :fields) || %{}
+    workers = Keyword.get(opts, :workers) || 2
     worker_pool = Keyword.get(opts, :worker_pool) || nil
     buffer_size = Keyword.get(opts, :buffer_size) || 10_000
-    utc_log     = Application.get_env(:logger, :utc_log, false)
-    formatter   =
+    utc_log = Application.get_env(:logger, :utc_log, false)
+
+    formatter =
       case LogstashJson.Event.resolve_formatter_config(Keyword.get(opts, :formatter)) do
         {:ok, fun} ->
           fun
+
         {:error, bad_formatter} ->
-          raise "Bad formatter configured for :logger, #{name} -- #{inspect bad_formatter}"
+          raise "Bad formatter configured for :logger, #{name} -- #{inspect(bad_formatter)}"
       end
 
     # Close previous worker pool
@@ -93,10 +98,11 @@ defmodule LogstashJson.TCP do
     # Create new queue and worker pool
     {:ok, queue} = BlockingQueue.start_link(buffer_size)
 
-    children = 1..workers |> Enum.map(& tcp_worker(&1, host, port, queue))
-    {:ok, worker_pool} = Supervisor.start_link(children, [strategy: :one_for_one])
+    children = 1..workers |> Enum.map(&tcp_worker(&1, host, port, queue))
+    {:ok, worker_pool} = Supervisor.start_link(children, strategy: :one_for_one)
 
-    %{level: level,
+    %{
+      level: level,
       host: host,
       port: port,
       fields: fields,
@@ -104,7 +110,8 @@ defmodule LogstashJson.TCP do
       queue: queue,
       worker_pool: worker_pool,
       formatter: formatter,
-      utc_log: utc_log}
+      utc_log: utc_log
+    }
   end
 
   defp env_var({:system, var, default}), do: System.get_env(var) || default
@@ -112,7 +119,7 @@ defmodule LogstashJson.TCP do
   defp env_var(value), do: value
 
   defp to_int(val) when is_integer(val), do: val
-  defp to_int(val), do: val |> Integer.parse |> elem(0)
+  defp to_int(val), do: val |> Integer.parse() |> elem(0)
 
   defp tcp_worker(id, host, port, queue) do
     worker(TCP.Connection, [host, port, queue, id], id: id)

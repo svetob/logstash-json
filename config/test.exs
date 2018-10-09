@@ -5,8 +5,7 @@ config :logger,
     {LogstashJson.Console, :json}
   ]
 
-config :logger, :json,
-  level: :info
+config :logger, :json, level: :info
 
 config :logger, :logstash,
   level: :debug,
@@ -21,4 +20,4 @@ config :logger, :logstash_with_formatter,
   fields: %{appid: "logstash-json"},
   workers: 1,
   buffer_size: 10_000,
-  formatter: fn (event) -> event |> Map.put(:added_by_formatter, "I am extra") end
+  formatter: fn event -> event |> Map.put(:added_by_formatter, "I am extra") end

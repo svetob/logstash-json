@@ -8,8 +8,8 @@ defmodule LogstashJson.Mixfile do
       elixir: "~> 1.4",
       description: description(),
       package: package(),
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
   end
@@ -39,7 +39,7 @@ defmodule LogstashJson.Mixfile do
       name: :logstash_json,
       maintainers: ["Tobias Ara Svensson"],
       licenses: ["MIT"],
-      links: %{"Github" => "https://github.com/svetob/logstash-json"},
+      links: %{"Github" => "https://github.com/svetob/logstash-json"}
     ]
   end
 end

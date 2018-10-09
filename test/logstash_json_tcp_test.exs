@@ -40,21 +40,21 @@ defmodule LogstashJsonTcpTest do
     # Receive all
     {:ok, socket} = :gen_tcp.accept(listener, 1000)
     msg = recv_all(socket)
-    :ok = :gen_tcp.close socket
-    :ok = :gen_tcp.close listener
+    :ok = :gen_tcp.close(socket)
+    :ok = :gen_tcp.close(listener)
     :gen_event.stop(logger)
 
     lines = msg |> String.trim() |> String.split("\n") |> List.to_tuple()
     assert tuple_size(lines) == 3
-    assert lines |> elem(0) |> Poison.decode! |> Map.get("message") == "Hello world!"
-    assert lines |> elem(1) |> Poison.decode! |> Map.get("message") == "Foo?"
-    assert lines |> elem(2) |> Poison.decode! |> Map.get("message") == "Bar!"
+    assert lines |> elem(0) |> Poison.decode!() |> Map.get("message") == "Hello world!"
+    assert lines |> elem(1) |> Poison.decode!() |> Map.get("message") == "Foo?"
+    assert lines |> elem(2) |> Poison.decode!() |> Map.get("message") == "Bar!"
   end
 
   test "Sent messages include metadata" do
     {listener, logger} = new_backend()
 
-    log(logger, "Hello world!", :info, [car: "Lamborghini"])
+    log(logger, "Hello world!", :info, car: "Lamborghini")
 
     msg = recv_and_close(listener)
     :gen_event.stop(logger)
@@ -64,12 +64,16 @@ defmodule LogstashJsonTcpTest do
   end
 
   test "Sent messages include static fields" do
-    opts = :logger |> Application.get_env(:logstash) |> Keyword.put(:fields, %{test_field: "test_value"})
+    opts =
+      :logger
+      |> Application.get_env(:logstash)
+      |> Keyword.put(:fields, %{test_field: "test_value"})
+
     Application.put_env(:logger, :logstash, opts)
 
     {listener, logger} = new_backend()
 
-    log(logger, "Hello world!", :info, [car: "Lamborghini"])
+    log(logger, "Hello world!", :info, car: "Lamborghini")
 
     msg = recv_and_close(listener)
     :gen_event.stop(logger)
@@ -94,8 +98,10 @@ defmodule LogstashJsonTcpTest do
   end
 
   defp new_backend(logger_name \\ :logstash) do
-    {:ok, listener} = :gen_tcp.listen 0, [:binary, {:active, false}, {:packet, 0}, {:reuseaddr, true}]
-    {:ok, port} = :inet.port listener
+    {:ok, listener} =
+      :gen_tcp.listen(0, [:binary, {:active, false}, {:packet, 0}, {:reuseaddr, true}])
+
+    {:ok, port} = :inet.port(listener)
     {listener, new_logger(port, logger_name)}
   end
 
@@ -111,14 +117,14 @@ defmodule LogstashJsonTcpTest do
   defp recv_and_close(listener) do
     {:ok, socket} = :gen_tcp.accept(listener, 1000)
     {:ok, msg} = :gen_tcp.recv(socket, 0, 1000)
-    :ok = :gen_tcp.close socket
-    :ok = :gen_tcp.close listener
+    :ok = :gen_tcp.close(socket)
+    :ok = :gen_tcp.close(listener)
     msg
   end
 
   defp recv_all(socket) do
     case :gen_tcp.recv(socket, 0, 100) do
-      {:ok, msg} -> msg <> recv_all socket
+      {:ok, msg} -> msg <> recv_all(socket)
       {:error, :timeout} -> ""
     end
   end

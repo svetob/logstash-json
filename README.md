@@ -117,7 +117,7 @@ end
 #### Using a Formatter
 Using the example TCP logger backend configuration above (minus the :console backend) with the following code:
 
-```Eilxir
+```Elixir
 defmodule MyApp do
   require Logger
 

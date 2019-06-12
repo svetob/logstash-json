@@ -61,7 +61,7 @@ defmodule LogstashJson.Event do
   end
 
   defp datetime({{year, month, day}, {hour, min, sec, millis}}) do
-    {:ok, ndt} = NaiveDateTime.new(year, month, day, hour, min, sec, {millis, 3})
+    {:ok, ndt} = NaiveDateTime.new(year, month, day, hour, min, sec, {millis * 1000, 3})
     NaiveDateTime.to_iso8601(ndt)
   end
 

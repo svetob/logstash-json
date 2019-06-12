@@ -14,7 +14,7 @@ defmodule EventTest do
 
     assert Map.get(event, :message) == message
     assert Map.get(event, :level) == :info
-    assert String.starts_with?(time, "2015-04-19T08:15:03.000")
+    assert String.starts_with?(time, "2015-04-19T08:15:03.028")
     assert String.length(time) == 29
   end
 

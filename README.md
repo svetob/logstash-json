@@ -14,7 +14,7 @@ def application do
 end
 
 defp deps do
-  [{:logstash, github: "svetob/logstash-json"}]
+  [{:logstash_json, "~> 0.7"}]
 end
 ```
 

@@ -19,7 +19,7 @@ defmodule LogstashJson.Event do
 
   @doc "Serialize a log event to a JSON string"
   def json(event) do
-    event |> print_pids |> Poison.encode()
+    event |> pre_encode |> Poison.encode()
   end
 
   def format_fields(fields, metadata, field_overrides) do
@@ -93,16 +93,24 @@ defmodule LogstashJson.Event do
     :binary.copy("0", count - byte_size(num)) <> num
   end
 
-  # Traverse complex objects and inspect PID's to their string representation
-  defp print_pids(it) when is_pid(it), do: inspect(it)
-  defp print_pids(it) when is_list(it), do: Enum.map(it, &print_pids/1)
-  defp print_pids(it) when is_tuple(it), do: print_pids(Tuple.to_list(it))
-  defp print_pids(%_{} = it), do: print_pids(Map.from_struct(it))
+  # traverse data and stringify special Elixir/Erlang terms
+  defp pre_encode(it) when is_pid(it), do: inspect(it)
+  defp pre_encode(it) when is_list(it), do: Enum.map(it, &pre_encode/1)
+  defp pre_encode(it) when is_tuple(it), do: pre_encode(Tuple.to_list(it))
 
-  defp print_pids(it) when is_map(it),
-    do: Enum.into(it, %{}, fn {k, v} -> {print_pids(k), print_pids(v)} end)
+  defp pre_encode(%module{} = it) do
+    try do
+      :ok = Protocol.assert_impl!(Poison.Encoder, module)
+      it
+    rescue
+      ArgumentError -> pre_encode(Map.from_struct(it))
+    end
+  end
 
-  defp print_pids(it) when is_binary(it) do
+  defp pre_encode(it) when is_map(it),
+    do: Enum.into(it, %{}, fn {k, v} -> {pre_encode(k), pre_encode(v)} end)
+
+  defp pre_encode(it) when is_binary(it) do
     it
     |> String.valid?()
     |> case do
@@ -111,5 +119,5 @@ defmodule LogstashJson.Event do
     end
   end
 
-  defp print_pids(it), do: it
+  defp pre_encode(it), do: it
 end

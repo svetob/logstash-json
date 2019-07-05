@@ -6,6 +6,17 @@ defmodule EventTest do
     defstruct [:bar]
   end
 
+  defmodule Hello do
+    defstruct [:world]
+  end
+
+  defimpl Poison.Encoder, for: Hello do
+    def encode(%Hello{}, opts) do
+      "HELLO_WORLD"
+      |> Poison.Encoder.BitString.encode(opts)
+    end
+  end
+
   test "Creates and serializes event" do
     message = "Meow meow"
     event = log(message)
@@ -104,6 +115,11 @@ defmodule EventTest do
   test "Formatter is used" do
     assert log("Something", %{}, [], &Map.put(&1, :hello, "there"))
            |> Map.get(:hello) == "there"
+  end
+
+  test "use existing implementation of Poison.Encoder" do
+    event = log_json("Hello", %{}, hello: %Hello{}) |> Poison.decode!()
+    assert %{"message" => "Hello", "hello" => "HELLO_WORLD"} = event
   end
 
   defp log(msg, fields \\ %{}, metadata \\ [], formatter \\ & &1) do

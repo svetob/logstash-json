@@ -12,6 +12,15 @@ otp_release:
   - 20.3
   - 19.3
 
+matrix:
+  exclude:
+    - elixir: 1.9
+      otp_release: 19.3
+    - elixir: 1.8
+      otp_release: 19.3
+    - elixir: 1.6
+      otp_release: 22
+
 script:
   - mix credo -a
   - mix test

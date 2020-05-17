@@ -44,7 +44,7 @@ The parameters are:
 - __workers__: Number of TCP workers, each worker opens a new TCP connection. (Default: 2)
 - __buffer_size__: Size of internal message buffer, used when logs are generated faster than logstash can consume them. (Default: 10_000)
 - __fields__: Additional fields to add to the JSON payload, such as appid. (Default: none)
-- __formatter__: Function to format TCP output. Can be either a function or a reference to a function in the form `{MyModule, :my_functiotn_name}` The function itself takes a Map and returns a possibly altered Map. (Default: `&(&1)`)
+- __formatter__: Function to format TCP output. Can be either a function or a reference to a function in the form `{MyModule, :my_function_name}` The function itself takes a Map and returns a possibly altered Map. (Default: `&(&1)`)
 
 The TCP logger handles various failure scenarios differently:
 - If the internal message buffer fills up, logging new messages __blocks__ until more messages are sent and there is space available in the buffer again.
@@ -85,7 +85,7 @@ Here is an example plug for setting the Metadata
 
 ```Elixir
 defmodule LoggerMetadata do
-  @behaviour Plug
+  import Plug.Conn
   require Logger
 
   def init(opts) do

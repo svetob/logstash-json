@@ -14,7 +14,7 @@ defmodule LogstashJsonTcpTest do
     msg = recv_and_close(listener)
     :gen_event.stop(logger)
 
-    event = Poison.decode!(msg)
+    event = Jason.decode!(msg)
     assert event["message"] == "Hello world!"
     assert event["level"] == "info"
   end
@@ -46,9 +46,9 @@ defmodule LogstashJsonTcpTest do
 
     lines = msg |> String.trim() |> String.split("\n") |> List.to_tuple()
     assert tuple_size(lines) == 3
-    assert lines |> elem(0) |> Poison.decode!() |> Map.get("message") == "Hello world!"
-    assert lines |> elem(1) |> Poison.decode!() |> Map.get("message") == "Foo?"
-    assert lines |> elem(2) |> Poison.decode!() |> Map.get("message") == "Bar!"
+    assert lines |> elem(0) |> Jason.decode!() |> Map.get("message") == "Hello world!"
+    assert lines |> elem(1) |> Jason.decode!() |> Map.get("message") == "Foo?"
+    assert lines |> elem(2) |> Jason.decode!() |> Map.get("message") == "Bar!"
   end
 
   test "Sent messages include metadata" do
@@ -59,7 +59,7 @@ defmodule LogstashJsonTcpTest do
     msg = recv_and_close(listener)
     :gen_event.stop(logger)
 
-    event = Poison.decode!(msg)
+    event = Jason.decode!(msg)
     assert event["car"] == "Lamborghini"
   end
 
@@ -78,7 +78,7 @@ defmodule LogstashJsonTcpTest do
     msg = recv_and_close(listener)
     :gen_event.stop(logger)
 
-    event = Poison.decode!(msg)
+    event = Jason.decode!(msg)
     assert event["test_field"] == "test_value"
   end
 
@@ -91,7 +91,7 @@ defmodule LogstashJsonTcpTest do
     msg = recv_and_close(listener)
     :gen_event.stop(logger)
 
-    event = Poison.decode!(msg)
+    event = Jason.decode!(msg)
     assert event["message"] == "Hello formatted world!"
     assert event["level"] == "info"
     assert event["added_by_formatter"] == "I am extra"

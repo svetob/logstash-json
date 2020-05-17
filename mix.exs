@@ -16,14 +16,14 @@ defmodule LogstashJson.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :poison, :blocking_queue]]
+    [applications: [:logger]]
   end
 
   defp deps do
     [
-      {:connection, "~> 1.0.4"},
-      {:poison, ">= 1.0.0"},
-      {:blocking_queue, "~> 1.3.0"},
+      {:connection, "~> 1.0"},
+      {:jason, "~> 1.2", optional: true},
+      {:blocking_queue, "~> 1.3", optional: true},
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:credo, ">= 0.0.0", only: :dev}
     ]

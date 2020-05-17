@@ -10,10 +10,10 @@ defmodule EventTest do
     defstruct [:world]
   end
 
-  defimpl Poison.Encoder, for: Hello do
+  defimpl Jason.Encoder, for: Hello do
     def encode(%Hello{}, opts) do
       "HELLO_WORLD"
-      |> Poison.Encoder.BitString.encode(opts)
+      |> Jason.Encoder.BitString.encode(opts)
     end
   end
 
@@ -61,7 +61,7 @@ defmodule EventTest do
 
   test "Converts event to json" do
     message = "Meowson the third"
-    event = message |> log_json() |> Poison.decode!()
+    event = message |> log_json() |> Jason.decode!()
 
     assert Map.get(event, "message") == message
     assert Map.get(event, "level") == "info"
@@ -91,12 +91,12 @@ defmodule EventTest do
   end
 
   test "Serializes structs to maps" do
-    event = log_json("Hello", %{}, foo: %Foo{bar: "baz"}) |> Poison.decode!()
+    event = log_json("Hello", %{}, foo: %Foo{bar: "baz"}) |> Jason.decode!()
     assert %{"message" => "Hello", "foo" => %{"bar" => "baz"}} = event
   end
 
   test "Serializes tuples to lists" do
-    event = log_json("Hello", %{}, foo: {:bar, :baz}) |> Poison.decode!()
+    event = log_json("Hello", %{}, foo: {:bar, :baz}) |> Jason.decode!()
     assert %{"message" => "Hello", "foo" => ["bar", "baz"]} = event
   end
 
@@ -105,7 +105,7 @@ defmodule EventTest do
     assert String.valid?(binary) == false
 
     binary_inspected = inspect(binary)
-    event = binary |> log_json(%{foo: binary}, bar: binary) |> Poison.decode!()
+    event = binary |> log_json(%{foo: binary}, bar: binary) |> Jason.decode!()
 
     assert event["message"] == binary_inspected
     assert event["bar"] == binary_inspected
@@ -117,8 +117,8 @@ defmodule EventTest do
            |> Map.get(:hello) == "there"
   end
 
-  test "use existing implementation of Poison.Encoder" do
-    event = log_json("Hello", %{}, hello: %Hello{}) |> Poison.decode!()
+  test "use existing implementation of Jason.Encoder" do
+    event = log_json("Hello", %{}, hello: %Hello{}) |> Jason.decode!()
     assert %{"message" => "Hello", "hello" => "HELLO_WORLD"} = event
   end
 

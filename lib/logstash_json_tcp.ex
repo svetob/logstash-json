@@ -59,7 +59,7 @@ defmodule LogstashJson.TCP do
         send_log(log, state)
 
       {:error, reason} ->
-        IO.puts("Failed to serialize event. error: #{reason}, event: #{inspect(event)}")
+        IO.puts("Failed to serialize event. error: #{inspect(reason)}, event: #{inspect(event)}")
     end
   end
 

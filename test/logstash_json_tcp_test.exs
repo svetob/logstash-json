@@ -42,6 +42,28 @@ defmodule LogstashJsonTcpTest do
       assert event["level"] == "error"
     end
 
+    defmodule Blubb do
+      require Logger
+
+      def do_logging() do
+        Logger.debug("Can you hear me?")
+      end
+    end
+
+    test "Log message with a module", %{socket: socket} do
+      Blubb.do_logging()
+
+      msg = recv_all(socket)
+
+      event = Poison.decode!(msg)
+      assert event["message"] =~ "Can you hear me?"
+      assert event["level"] == "debug"
+
+      if event["mfa"] do
+        assert event["mfa"] == ["Elixir.LogstashJsonTcpTest.Blubb", "do_logging", "0"]
+      end
+    end
+
     test "Log message from missing FunctionClauseError", %{socket: socket} do
       Task.start(fn ->
         missing_clause = fn :something -> nil end

@@ -14,21 +14,24 @@ defmodule LogstashJsonTcpConnectionTest do
   end
 
   test "Drops data when no connection" do
-    {:ok, queue} = BlockingQueue.start_link(3)
-    {:ok, conn} = LogstashJson.TCP.Connection.start_link('localhost', 1, queue)
-    LogstashJson.TCP.Connection.send(conn, "One\n")
-    LogstashJson.TCP.Connection.send(conn, "Two\n")
+    assert ExUnit.CaptureIO.capture_io(fn ->
+             {:ok, queue} = BlockingQueue.start_link(3)
+             {:ok, conn} = LogstashJson.TCP.Connection.start_link('localhost', 1, queue)
+             LogstashJson.TCP.Connection.send(conn, "One\n")
+             LogstashJson.TCP.Connection.send(conn, "Two\n")
 
-    {listener, port} = new_listener()
-    LogstashJson.TCP.Connection.configure(conn, 'localhost', port)
+             {listener, port} = new_listener()
+             LogstashJson.TCP.Connection.configure(conn, 'localhost', port)
 
-    {:ok, socket} = :gen_tcp.accept(listener, 1000)
-    LogstashJson.TCP.Connection.send(conn, "Three\n")
-    {:ok, msg} = :gen_tcp.recv(socket, 0, 5000)
-    :ok = :gen_tcp.close(socket)
-    :ok = :gen_tcp.close(listener)
+             {:ok, socket} = :gen_tcp.accept(listener, 1000)
+             LogstashJson.TCP.Connection.send(conn, "Three\n")
+             {:ok, msg} = :gen_tcp.recv(socket, 0, 5000)
+             :ok = :gen_tcp.close(socket)
+             :ok = :gen_tcp.close(listener)
 
-    assert msg == "Three\n"
+             assert msg == "Three\n"
+           end) =~
+             "Elixir.LogstashJson.TCP.Connection[0]: localhost:1 connection failed: connection refused"
   end
 
   test "Consumes messages from queue" do

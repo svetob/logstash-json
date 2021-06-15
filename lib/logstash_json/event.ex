@@ -19,7 +19,7 @@ defmodule LogstashJson.Event do
 
   @doc "Serialize a log event to a JSON string"
   def json(event) do
-    event |> pre_encode |> Poison.encode()
+    event |> pre_encode |> json_library().encode()
   end
 
   def format_fields(fields, metadata, field_overrides) do
@@ -32,6 +32,11 @@ defmodule LogstashJson.Event do
   defp format_metadata(metadata) do
     metadata
     |> Enum.into(%{})
+  end
+
+  defp json_library() do
+    Application.get_env(:logger, :logstash)
+    |> Keyword.get(:json_library, Jason)
   end
 
   def resolve_formatter_config(formatter_spec, default_formatter \\ & &1) do
@@ -102,7 +107,7 @@ defmodule LogstashJson.Event do
 
   defp pre_encode(%module{} = it) do
     try do
-      :ok = Protocol.assert_impl!(Poison.Encoder, module)
+      :ok = Protocol.assert_impl!(Module.concat(json_library(), Encoder), module)
       it
     rescue
       ArgumentError -> pre_encode(Map.from_struct(it))

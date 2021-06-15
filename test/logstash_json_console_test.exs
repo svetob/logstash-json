@@ -16,7 +16,7 @@ defmodule LogstashJsonConsoleTest do
         :gen_event.stop(logger)
       end)
 
-    event = Poison.decode!(io)
+    event = Jason.decode!(io)
     assert event["message"] == "Hello world!"
     assert event["level"] == "info"
   end
@@ -40,7 +40,7 @@ defmodule LogstashJsonConsoleTest do
         :gen_event.stop(logger)
       end)
 
-    event = Poison.decode!(io)
+    event = Jason.decode!(io)
     assert event["level"] == "warn"
   end
 
@@ -56,9 +56,9 @@ defmodule LogstashJsonConsoleTest do
 
     lines = io |> String.trim() |> String.split("\n") |> List.to_tuple()
     assert tuple_size(lines) == 3
-    assert lines |> elem(0) |> Poison.decode!() |> Map.get("message") == "Hello world!"
-    assert lines |> elem(1) |> Poison.decode!() |> Map.get("message") == "Foo?"
-    assert lines |> elem(2) |> Poison.decode!() |> Map.get("message") == "Bar!"
+    assert lines |> elem(0) |> Jason.decode!() |> Map.get("message") == "Hello world!"
+    assert lines |> elem(1) |> Jason.decode!() |> Map.get("message") == "Foo?"
+    assert lines |> elem(2) |> Jason.decode!() |> Map.get("message") == "Bar!"
   end
 
   test "Sent messages include metadata" do
@@ -69,7 +69,7 @@ defmodule LogstashJsonConsoleTest do
         :gen_event.stop(logger)
       end)
 
-    event = Poison.decode!(io)
+    event = Jason.decode!(io)
     assert event["car"] == "Lamborghini"
   end
 
@@ -86,7 +86,7 @@ defmodule LogstashJsonConsoleTest do
         :gen_event.stop(logger)
       end)
 
-    event = Poison.decode!(io)
+    event = Jason.decode!(io)
     assert event["test_field"] == "test_value"
   end
 
@@ -105,7 +105,7 @@ defmodule LogstashJsonConsoleTest do
         :gen_event.stop(logger)
       end)
 
-    event = Poison.decode!(io)
+    event = Jason.decode!(io)
     assert event["message"] == "Hello world!"
     assert event["level"] == "info"
     assert event["added_by_formatter"] == "I am extra"

@@ -19,6 +19,65 @@ defmodule LogstashJsonTcpTest do
     assert event["level"] == "info"
   end
 
+  describe "Error logging" do
+    setup [:log_to_logstash_tcp]
+
+    test "Log message from throw", %{socket: socket} do
+      Task.start(fn -> throw("throw up") end)
+
+      msg = recv_all(socket)
+
+      event = Poison.decode!(msg)
+      assert event["message"] =~ "throw up"
+      assert event["level"] == "error"
+    end
+
+    test "Log message from raise", %{socket: socket} do
+      Task.start(fn -> raise "my exception" end)
+
+      msg = recv_all(socket)
+
+      event = Poison.decode!(msg)
+      assert event["message"] =~ "my exception"
+      assert event["level"] == "error"
+    end
+
+    defmodule Blubb do
+      require Logger
+
+      def do_logging() do
+        Logger.debug("Can you hear me?")
+      end
+    end
+
+    test "Log message with a module", %{socket: socket} do
+      Blubb.do_logging()
+
+      msg = recv_all(socket)
+
+      event = Poison.decode!(msg)
+      assert event["message"] =~ "Can you hear me?"
+      assert event["level"] == "debug"
+
+      if event["mfa"] do
+        assert event["mfa"] == ["Elixir.LogstashJsonTcpTest.Blubb", "do_logging", "0"]
+      end
+    end
+
+    test "Log message from missing FunctionClauseError", %{socket: socket} do
+      Task.start(fn ->
+        missing_clause = fn :something -> nil end
+        missing_clause.(:not_something)
+      end)
+
+      msg = recv_all(socket)
+
+      event = Poison.decode!(msg)
+      assert event["message"] =~ "FunctionClauseError"
+      assert event["level"] == "error"
+    end
+  end
+
   test "TCP log messages end with newline" do
     {listener, logger} = new_backend()
 
@@ -132,5 +191,33 @@ defmodule LogstashJsonTcpTest do
   defp log(logger, msg, level \\ :info, metadata \\ []) do
     ts = {{2017, 1, 1}, {1, 2, 3, 400}}
     :gen_event.notify(logger, {level, logger, {Logger, msg, ts, metadata}})
+  end
+
+  defp log_to_logstash_tcp(_context) do
+    # Create listener socket
+    {:ok, socket} = :gen_tcp.listen(0, [:binary, packet: :line, active: false, reuseaddr: true])
+    {:ok, port} = :inet.port(socket)
+
+    # Put port to logstash config
+    previous_opts = Application.get_env(:logger, :logstash)
+    new_opts = Keyword.put(previous_opts, :port, "#{port}")
+    :ok = Application.put_env(:logger, :logstash, new_opts)
+
+    # Switch backends
+    {:ok, _pid} = Logger.add_backend({LogstashJson.TCP, :logstash}, flush: true)
+    :ok = Logger.remove_backend({LogstashJson.Console, :json})
+
+    # Accept connections
+    {:ok, client} = :gen_tcp.accept(socket)
+
+    # Revert when finished
+    on_exit(fn ->
+      :gen_tcp.close(socket)
+      Logger.remove_backend({LogstashJson.TCP, :logstash})
+      Logger.add_backend({LogstashJson.Console, :json})
+      :ok = Application.put_env(:logger, :logstash, previous_opts)
+    end)
+
+    {:ok, socket: client}
   end
 end

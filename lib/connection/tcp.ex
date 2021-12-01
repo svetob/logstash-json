@@ -126,7 +126,7 @@ end
 
 defmodule LogstashJson.TCP.Connection.Worker do
   @moduledoc """
-  Worker that reads log messages from a BlockingQueue and writes them to
+  Worker that reads log messages from a BlockingQueue and writes them to
   logstash using a TCP connection.
   """
 

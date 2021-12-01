@@ -1,17 +1,21 @@
 defmodule LogstashJson.Mixfile do
   use Mix.Project
 
+  @source_url "https://github.com/svetob/logstash-json"
+  @version "0.7.5"
+
   def project do
     [
       app: :logstash_json,
-      version: "0.7.5",
+      version: @version,
       elixir: "~> 1.4",
-      description: description(),
-      package: package(),
       build_embedded: Mix.env() == :prod,
       start_permanent: Mix.env() == :prod,
       consolidate_protocols: Mix.env() != :test,
-      deps: deps()
+      deps: deps(),
+      docs: docs(),
+      package: package(),
+      preferred_cli_env: [docs: :docs]
     ]
   end
 
@@ -24,23 +28,31 @@ defmodule LogstashJson.Mixfile do
       {:connection, "~> 1.0"},
       {:jason, "~> 1.2", optional: true},
       {:blocking_queue, "~> 1.3", optional: true},
-      {:ex_doc, ">= 0.0.0", only: :dev},
+      {:ex_doc, ">= 0.0.0", only: :docs, runtime: false},
       {:credo, ">= 0.0.0", only: :dev}
     ]
-  end
-
-  defp description do
-    """
-    Formats logs as JSON, forwards to Logstash via TCP, or to console.
-    """
   end
 
   defp package do
     [
       name: :logstash_json,
+      description: "Formats logs as JSON, forwards to Logstash via TCP, or to console.",
       maintainers: ["Tobias Ara Svensson"],
       licenses: ["MIT"],
-      links: %{"Github" => "https://github.com/svetob/logstash-json"}
+      links: %{"Github" => @source_url}
+    ]
+  end
+
+  defp docs do
+    [
+      extras: [
+        "LICENSE.md": [title: "License"],
+        "README.md": [title: "Overview"]
+      ],
+      main: "readme",
+      source_url: @source_url,
+      source_ref: "v#{@version}",
+      formatters: ["html"]
     ]
   end
 end

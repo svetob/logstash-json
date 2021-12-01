@@ -1,4 +1,11 @@
-# logstash-json ![](https://travis-ci.org/svetob/logstash-json.svg?branch=master)
+# logstash-json
+
+![](https://travis-ci.org/svetob/logstash-json.svg?branch=master)
+[![Module Version](https://img.shields.io/hexpm/v/logstash_json.svg)](https://hex.pm/packages/logstash_json)
+[![Hex Docs](https://img.shields.io/badge/hex-docs-lightgreen.svg)](https://hexdocs.pm/logstash_json/)
+[![Total Download](https://img.shields.io/hexpm/dt/logstash_json.svg)](https://hex.pm/packages/logstash_json)
+[![License](https://img.shields.io/hexpm/l/logstash_json.svg)](https://github.com/svetob/logstash-json/blob/master/LICENSE.md)
+[![Last Updated](https://img.shields.io/github/last-commit/svetob/logstash-json.svg)](https://github.com/svetob/logstash-json/commits/master)
 
 Elixir Logger backend which sends logs to logstash in JSON format via TCP.
 
@@ -6,22 +13,27 @@ Also comes with a console logger.
 
 ## Configuration
 
-In `mix.exs`, add `logstash_json` as a dependency and to your applications:
+In `mix.exs`, add `:logstash_json` as a dependency and to your applications:
 
-```
+```elixir
 def application do
-  [applications: [:logger, :logstash_json]]
+  [
+    applications: [:logger, :logstash_json]
+  ]
 end
 
 defp deps do
-  [{:logstash_json, "~> 0.7"}]
+  [
+    {:logstash_json, "~> 0.7"}
+  ]
 end
 ```
 
 ### Logstash TCP logger backend
+
 In `config.exs` add the TCP logger as a backend and configure it:
 
-```Elixir
+```elixir
 config :logger,
   backends: [
     :console,
@@ -55,7 +67,7 @@ The TCP logger handles various failure scenarios differently:
 
 You can also log JSON to console if you'd like:
 
-```Elixir
+```elixir
 config :logger,
   backends: [
     {LogstashJson.Console, :json}
@@ -69,7 +81,7 @@ config :logger, :json,
 Using `Logger.metadata/1` it is possible to send additional information that can be sent as a part of a log statement. These will appear in Kibana as top level fields and also collected in a separate field. An example is to send HTTP status codes or request duration details.
 Metadata can also be appended with the second argument of `Logger.info/2`.
 
-```Elixir
+```elixir
 iex(1)> require Logger
 Logger
 iex(2)> Logger.metadata([status: 200, method: "GET"])
@@ -81,9 +93,9 @@ iex(4)> Logger.info "Test", [foo: "bar"]
 {"status":200,"pid":"#PID<0.160.0>","module":null,"method":"GET","metadata":{"status":200,"pid":"#PID<0.160.0>","module":null,"method":"GET","line":5,"function":null,"foo":"bar","file":"iex"},"message":"Test","line":5,"level":"info","function":null,"foo":"bar","file":"iex","@timestamp":"2017-08-09T15:48:36.910+02:00"}
 ```
 
-Here is an example plug for setting the Metadata
+Here is an example plug for setting the Metadata:
 
-```Elixir
+```elixir
 defmodule LoggerMetadata do
   import Plug.Conn
   require Logger
@@ -115,9 +127,10 @@ end
 ```
 
 #### Using a Formatter
+
 Using the example TCP logger backend configuration above (minus the :console backend) with the following code:
 
-```Elixir
+```elixir
 defmodule MyApp do
   require Logger
 
@@ -147,7 +160,7 @@ defmodule MyApp do
 end
 ```
 
-```Elixir
+```elixir
 iex(1)> require Logger
 Logger
 iex(2)> Logger.error("an error")
@@ -158,7 +171,15 @@ iex(4)>
 ```
 
 Results in the following being sent via TCP:
-```JSON
+
+```json
 {"module":null,"message":"an error","level":3,"function":null,"beam_pid":"#PID<0.206.0>","appid":"my-app","@timestamp":"2017-12-29T19:16:29.397+00:00"}
 {"module":"Elixir.MyApp","message":"hello there","level":6,"function":"try_to_log/1","beam_pid":"#PID<0.206.0>","application":"thing","appid":"my-app","@timestamp":"2017-12-29T19:16:42.434+00:00"}
 ```
+
+## Copyright and License
+
+Copyright (c) 2016 Tobias Svensson
+
+This work is free. You can redistribute it and/or modify it under the
+terms of the MIT License. See the [LICENSE.md](./LICENSE.md) file for more details.

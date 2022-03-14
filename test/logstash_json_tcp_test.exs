@@ -27,7 +27,7 @@ defmodule LogstashJsonTcpTest do
 
       msg = recv_all(socket)
 
-      event = Poison.decode!(msg)
+      event = Jason.decode!(msg)
       assert event["message"] =~ "throw up"
       assert event["level"] == "error"
     end
@@ -37,7 +37,7 @@ defmodule LogstashJsonTcpTest do
 
       msg = recv_all(socket)
 
-      event = Poison.decode!(msg)
+      event = Jason.decode!(msg)
       assert event["message"] =~ "my exception"
       assert event["level"] == "error"
     end
@@ -55,7 +55,7 @@ defmodule LogstashJsonTcpTest do
 
       msg = recv_all(socket)
 
-      event = Poison.decode!(msg)
+      event = Jason.decode!(msg)
       assert event["message"] =~ "Can you hear me?"
       assert event["level"] == "debug"
 
@@ -72,7 +72,7 @@ defmodule LogstashJsonTcpTest do
 
       msg = recv_all(socket)
 
-      event = Poison.decode!(msg)
+      event = Jason.decode!(msg)
       assert event["message"] =~ "FunctionClauseError"
       assert event["level"] == "error"
     end
